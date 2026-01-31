@@ -1,0 +1,94 @@
+{% extends "app_base.html" %}
+
+{% block title %}Results - {{ project.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
+
+    <!-- Header Area -->
+    <div class="max-w-3xl w-full text-center mb-8">
+        <h2 class="text-3xl font-extrabold text-gray-900">Clinical Trial Design Results</h2>
+        <p class="mt-2 text-sm text-gray-600">
+            Optimization results for project: <span class="font-semibold text-[#0077a2]">{{ project.title }}</span>
+        </p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="max-w-3xl w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+
+        <!-- Summary Section -->
+        <div class="bg-[#0077a2] px-6 py-4">
+            <h3 class="text-lg font-medium text-white flex items-center gap-2">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                임상시험 최적화 설계 결과 요약
+            </h3>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="prose prose-sm text-gray-500">
+                <p>
+                    본 프로젝트(<strong>{{ project.title }}</strong>)에 대한 AI 기반 가상 임상시험 최적화 설계 결과입니다.
+                    아래 생성된 코호트들은 각 임상 단계(Phase 1, 2, 3)에 맞춰 최적화된 인구 집단과 투여 시나리오를 포함하고 있습니다.
+                </p>
+            </div>
+
+            <!-- Results List -->
+            <div class="space-y-4">
+                <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wider border-b pb-2">Generated Cohorts
+                </h4>
+
+                {% if cohorts %}
+                <div class="grid gap-3">
+                    {% for cohort in cohorts %}
+                    <a href="/projects/{{ project.id }}/cohorts/{{ cohort.id }}"
+                        class="block group bg-gray-50 hover:bg-white border border-gray-200 rounded-lg p-4 transition hover:shadow-md flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Result
+                                    {{ loop.index }}</span>
+                                <h5 class="text-md font-bold text-gray-800 group-hover:text-[#0077a2]">{{ cohort.name }}
+                                </h5>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">{{ cohort.description or 'No description provided.' }}
+                            </p>
+                        </div>
+                        <div class="flex items-center text-gray-400 group-hover:text-[#0077a2]">
+                            <span class="text-xs mr-2">{{ cohort.created_at.strftime('%Y-%m-%d') }}</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <p class="text-gray-500 text-sm">No optimization results found.</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+            <a href="/dashboard" class="text-sm text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Dashboard
+            </a>
+            <a href="/projects/{{ project.id }}"
+                class="px-4 py-2 bg-[#0077a2] text-white text-sm font-medium rounded-lg hover:bg-[#005a7a] transition shadow-sm">
+                Go to Project
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

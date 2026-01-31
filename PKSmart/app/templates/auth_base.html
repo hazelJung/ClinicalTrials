@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block body_class %}min-h-screen flex items-center justify-center p-4 bg-slate-900{% endblock %}
+
+{% block body %}
+<!-- Background (can be overriden or set here) -->
+<div class="fixed inset-0 z-0 pointer-events-none"
+    style="background: url('/static/certara_bg.jpg') center center / cover no-repeat fixed;">
+</div>
+
+<!-- Dark Overlay -->
+<div class="fixed inset-0 bg-slate-900/40 z-0 pointer-events-none"></div>
+
+<!-- Top Header -->
+<div class="fixed top-0 left-0 right-0 p-6 text-center z-10">
+    <div class="flex items-center justify-center gap-2 text-white/80 text-sm">
+        <span>PharmaTwin Portal</span>
+        <span class="text-white/50">|</span>
+        <span class="text-white/60">AI Prediction Platform</span>
+    </div>
+</div>
+
+<!-- Auth Card -->
+<div class="relative z-10 w-full max-w-md">
+    <div class="bg-white rounded-xl shadow-2xl p-8">
+
+        <!-- Logo -->
+        <div class="flex justify-center mb-6">
+            <img src="/static/certara_full_logo.svg" alt="Certara" class="h-10">
+        </div>
+
+        <!-- Page Title -->
+        <div class="text-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">{% block auth_title %}Welcome{% endblock %}</h2>
+        </div>
+
+        <!-- Error Message Area -->
+        {% if error %}
+        <div class="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clip-rule="evenodd" />
+            </svg>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- Auth Form Content -->
+        {% block auth_content %}{% endblock %}
+
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-center text-xs text-white/50 z-10">
+    <span>Powered by Certara</span>
+    <span>개인정보 보호정책</span>
+</div>
+{% endblock %}

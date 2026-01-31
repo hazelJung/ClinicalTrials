@@ -1,0 +1,22 @@
+rdkit
+mordredcommunity
+scikit-learn
+scipy
+pandas
+numpy
+joblib
+tqdm
+requests
+# Web Framework
+fastapi
+uvicorn
+# Database
+sqlalchemy
+# Template Engine
+jinja2
+# Authentication
+python-multipart
+passlib
+bcrypt==3.2.2
+python-jose
+itsdangerous

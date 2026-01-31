@@ -1,0 +1,120 @@
+# 🏗️ PKSmart Developer & Design Guide
+
+이 문서는 팀원들이 **PKSmart 프로젝트**를 함께 개발할 때 디자인과 코드 스타일을 통일하기 위한 가이드라인입니다. 새로운 페이지를 만들거나 기능을 추가할 때 이 규칙을 참고해 주세요.
+
+## 1. 🎨 디자인 시스템 (Design System)
+
+### **Color Palette**
+우리는 **Certara/PharmaTwin** 테마를 따릅니다.
+- **Primary Blue**: `#0077a2` (링크, 버튼, 강조 텍스트)
+- **Primary Dark**: `#005a7a` (버튼 Hover)
+- **Background**: `#F3F4F6` (bg-gray-100)
+- **Card Background**: `#FFFFFF` (white)
+- **Text**: `text-gray-800` (본문), `text-gray-500` (보조)
+
+### **UI Components**
+모든 페이지는 `app_base.html`을 상속받아야 합니다.
+
+```html
+{% extends "app_base.html" %}
+
+{% block title %}페이지 제목{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- 콘텐츠 작성 -->
+    <div class="content-card p-6">
+       ...
+    </div>
+</div>
+{% endblock %}
+```
+
+### **CSS Utility Classes (Tailwind)**
+- **카드 스타일**: `.content-card` (커스텀 클래스, `dashboard.html` 등 참조)
+  - `bg-white border border-gray-200 rounded-lg shadow-sm`
+- **버튼**:
+  - Primary: `bg-[#0077a2] hover:bg-[#005a7a] text-white rounded-lg`
+- **아이콘**: Heroicons (SVG) 사용 권장.
+
+---
+
+## 2. 🤖 AI 프롬프트 템플릿 (AI Prompt Template)
+
+팀원들이 각자 AI(ChatGPT, Claude 등)를 활용해 개발할 때, 아래 프롬프트를 사용하면 **기존 코드와 통일된 결과물**을 쉽게 얻을 수 있습니다.
+
+### **[복사해서 사용하세요]**
+
+```markdown
+# 프로젝트에 새로운 결과 페이지(Result Page) 추가 요청
+
+현재 프로젝트의 디자인 통일성을 유지하면서 새로운 페이지를 추가하고 싶어.
+기존 코드(`app_base.html` 상속, Tailwind CSS, FastAPI 라우터 등)를 그대로 따라서 구현해줘.
+
+## 1. 페이지 개요
+- **페이지 이름/URL**: [예: /results/comparison (비교 분석 페이지)]
+- **목적**: [예: 두 개의 약물 시뮬레이션 결과를 나란히 놓고 비교하는 화면]
+
+## 2. 디자인 및 레이아웃 요구사항 (필수 유지)
+1. **템플릿 상속**: 무조건 `app_base.html`을 상속(`{% extends "app_base.html" %}`)받을 것.
+2. **사이드바 모드**:
+   - [ ] Compact 모드 (아이콘 위주, 상세 페이지용) -> `sidebar_mode="compact"`
+   - [ ] Wide 모드 (기본 대시보드용) -> `sidebar_mode="default"`
+3. **스타일**: 기존과 동일한 Tailwind CSS 사용 (색상 코드 `#0077a2`, 카드 스타일 `.content-card` 등 재사용).
+4. **헤더**: `{% block header_left %}`에 페이지 제목과 뒤로가기 버튼(필요시) 배치.
+
+## 3. 핵심 기능 및 콘텐츠
+이 페이지에 들어갈 구체적인 구성 요소는 다음과 같아:
+- **섹션 1**: [구체적인 설명]
+- **섹션 2**: [구체적인 설명]
+- **데이터**: [백엔드 연결 정보 등]
+
+## 4. 작업 범위
+1. `app/templates/[파일명].html` 생성
+2. `app/routers/[관련라우터].py`에 엔드포인트 추가 (GET 요청 처리)
+
+이 가이드에 맞춰서 코드를 작성해 줘.
+```
+
+---
+
+## 3. 📂 프로젝트 구조 (Structure)
+
+```text
+PKSmart/
+├── app/
+│   ├── main.py            # FastAPI 진입점
+│   ├── routers/           # 페이지 라우팅 로직 (projects.py, cohorts.py 등)
+│   ├── templates/         # HTML (Jinja2)
+│   │   ├── app_base.html  # 메인 레이아웃 (사이드바 포함)
+│   │   ├── auth_base.html # 로그인/가입 레이아웃
+│   │   └── ...
+│   └── static/            # CSS, JS, Images
+├── pksmart/               # AI 모델/데이터 처리 로직
+└── docs/                  # 문서
+```
+## 5. 🏗️ Template Architecture (Front-end)
+
+우리 프로젝트의 템플릿 상속 구조는 다음과 같습니다.
+
+```mermaid
+graph TD
+    Base[base.html<br/>(Tailwind, Fonts, Scripts)]
+    
+    Base --> AppBase[app_base.html<br/>(Sidebar, Header Layout)]
+    Base --> AuthBase[auth_base.html<br/>(Centered Card Layout)]
+    Base --> Index[index.html<br/>(Landing Page)]
+
+    AppBase --> Dashboard[dashboard.html]
+    AppBase --> ProjectDetail[projects/*.html]
+    AppBase --> ResultDetail[project_results.html<br/>(Internal: Centered Card Style)]
+    AppBase --> ReportDetail[ind_report_detail.html<br/>(Internal: Centered Card Style)]
+
+    AuthBase --> Login[login.html]
+    AuthBase --> Signup[signup.html]
+```
+
+### **핵심 가이드**
+1. **`app_base.html`**: 대시보드 내의 모든 페이지는 이 파일을 상속받아야 사이드바가 유지됩니다.
+2. **`auth_base.html`**: 로그인/회원가입 등 사이드바가 **없는** 페이지용입니다.
+3. **상세 페이지 디자인**: `project_results.html`이나 `ind_report_detail.html`은 `app_base.html`을 상속받지만, 내부 콘텐츠 디자인은 `auth_base.html`의 깔끔한 카드 스타일을 차용하여 구현했습니다. (상속 관계 아님)

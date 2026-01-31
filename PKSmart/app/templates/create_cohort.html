@@ -1,0 +1,446 @@
+{% extends "app_base.html" %}
+
+{% block title %}Create Virtual Cohort - PharmaTwin{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        background: #0077a2;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background .15s ease-in-out;
+    }
+</style>
+{% endblock %}
+
+{% block header_left %}
+<div class="flex items-center gap-4">
+    <a href="/projects/{{ project.id }}" class="text-gray-400 hover:text-gray-600 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+    </a>
+    <span class="text-xl font-bold text-gray-800">{{ project.title }}</span>
+    <span class="px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-500 font-mono">ID: {{ project.id }}</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-1 overflow-hidden" style="height: calc(100vh - 65px);">
+
+    <!-- Left Panel: Input & Settings (Fixed Width, Scrollable) -->
+    <div class="w-[400px] bg-white border-r border-gray-200 flex flex-col z-10 shadow-xl overflow-hidden shrink-0">
+        <div class="p-5 border-b border-gray-200 bg-white shrink-0">
+            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-[#0077a2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                Cohort Settings
+            </h2>
+            <p class="text-xs text-gray-500 mt-1">Configure your virtual clinical trial.</p>
+        </div>
+
+        <form action="/projects/{{ project.id }}/cohorts" method="POST"
+            class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6">
+
+            <!-- 0. Clinical Phase Selection -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Clinical Phase</h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="phase" value="1" class="peer sr-only" checked>
+                        <div
+                            class="text-center py-2 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 transition text-sm font-medium">
+                            Phase 1
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="phase" value="2" class="peer sr-only">
+                        <div
+                            class="text-center py-2 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 peer-checked:bg-purple-50 peer-checked:border-purple-500 peer-checked:text-purple-700 transition text-sm font-medium">
+                            Phase 2
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="phase" value="3" class="peer sr-only">
+                        <div
+                            class="text-center py-2 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-700 transition text-sm font-medium">
+                            Phase 3
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- 1. Demographics Section -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Demographics</h3>
+
+                <!-- Race -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Race / Population</label>
+                    <select name="pop"
+                        class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-[#0077a2] focus:border-[#0077a2]">
+                        <option value="EUR" selected>European (EUR)</option>
+                        <option value="EAS">East Asian (EAS)</option>
+                        <option value="AFR">African (AFR)</option>
+                        <option value="AMR">Ad Mixed American (AMR)</option>
+                    </select>
+                </div>
+
+                <!-- Sample Size -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sample Size
+                        (Subjects)</label>
+                    <input type="number" name="n_subjects" value="1000" min="100" max="10000"
+                        class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-[#0077a2] focus:border-[#0077a2]">
+                </div>
+
+                <!-- Age Range -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Age Range: <span id="ageDisplay"
+                            class="font-bold text-[#0077a2]">18 - 80</span></label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="age_min" id="age_min" value="18" min="0" max="100"
+                            class="w-16 border rounded p-1 text-center text-sm">
+                        <span class="text-gray-400">-</span>
+                        <input type="number" name="age_max" id="age_max" value="80" min="0" max="100"
+                            class="w-16 border rounded p-1 text-center text-sm">
+                    </div>
+                </div>
+
+                <!-- Gender Ratio -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Gender Ratio (Female
+                        %)</label>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-blue-500">Male</span>
+                        <input type="range" name="female_ratio" min="0" max="1" step="0.1" value="0.5" class="flex-1"
+                            oninput="document.getElementById('ratioVal').innerText = Math.round(this.value * 100) + '%'">
+                        <span class="text-xs font-bold text-pink-500">Female</span>
+                    </div>
+                    <div class="text-right text-xs text-gray-500 mt-1">Female: <span id="ratioVal"
+                            class="font-bold text-gray-800">50%</span></div>
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- 2. PK Parameters Section -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">PK Parameters</h3>
+                    <!-- Toggle -->
+                    <div class="flex bg-gray-100 p-0.5 rounded-lg text-xs">
+                        <button type="button" onclick="setMode('auto')" id="btnAuto"
+                            class="px-3 py-1 rounded-md bg-white shadow-sm text-[#0077a2] font-semibold transition">Auto
+                            Load</button>
+                        <button type="button" onclick="setMode('manual')" id="btnManual"
+                            class="px-3 py-1 rounded-md text-gray-500 font-medium hover:text-gray-700 transition">Manual</button>
+                    </div>
+                </div>
+
+                <!-- Auto Load Info -->
+                <div id="autoInfo" class="bg-blue-50 p-3 rounded-md border border-blue-100 text-xs text-blue-800">
+                    {% if prediction %}
+                    <p class="font-bold mb-1">Loaded from Analysis #{{ prediction.id }}</p>
+                    <p>CL and Vd values will be used from the prediction model.</p>
+                    {% else %}
+                    <p class="text-yellow-700">No prediction context found. Please invoke from Project
+                        Detail page.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Input Fields -->
+                <div class="grid grid-cols-2 gap-3" id="pkInputs">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Clearance (mL/min/kg)</label>
+                        <input type="number" step="0.01" name="cl" id="inputCL"
+                            value="{{ '%.2f'|format(prediction.result_json.pk.human_CL_mL_min_kg_linear) if prediction else '' }}"
+                            data-auto-value="{{ '%.2f'|format(prediction.result_json.pk.human_CL_mL_min_kg_linear) if prediction else '' }}"
+                            class="w-full bg-gray-50 border border-gray-200 rounded p-2 text-sm text-gray-500 cursor-not-allowed"
+                            readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Vdss (L/kg)</label>
+                        <input type="number" step="0.01" name="vd" id="inputVD"
+                            value="{{ '%.2f'|format(prediction.result_json.pk.human_VDss_L_kg_linear) if prediction else '' }}"
+                            data-auto-value="{{ '%.2f'|format(prediction.result_json.pk.human_VDss_L_kg_linear) if prediction else '' }}"
+                            class="w-full bg-gray-50 border border-gray-200 rounded p-2 text-sm text-gray-500 cursor-not-allowed"
+                            readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Mol. Weight (g/mol)</label>
+                        <input type="number" step="0.01" name="mw" id="inputMW"
+                            value="{{ prediction.result_json.properties.mw if prediction else '' }}"
+                            data-auto-value="{{ prediction.result_json.properties.mw if prediction else '' }}"
+                            class="w-full bg-gray-50 border border-gray-200 rounded p-2 text-sm text-gray-500 cursor-not-allowed"
+                            readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Fraction Unbound</label>
+                        <input type="number" step="0.01" name="fu" id="inputFU"
+                            value="{{ '%.2f'|format(prediction.result_json.pk.human_fup) if prediction else '0.9' }}"
+                            data-auto-value="{{ '%.2f'|format(prediction.result_json.pk.human_fup) if prediction else '0.9' }}"
+                            class="w-full bg-gray-50 border border-gray-200 rounded p-2 text-sm text-gray-500 cursor-not-allowed"
+                            readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 pb-8">
+                <button type="submit"
+                    class="w-full bg-[#0077a2] hover:bg-[#005a7a] text-white py-3 rounded-lg font-bold shadow-md transition flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Run Visual Simulation
+                </button>
+                <p class="text-[10px] text-center text-gray-400 mt-2">Estimation time: ~1 second (N=100) to
+                    ~10 seconds (N=1000)</p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Right Panel: Cohort List -->
+    <div class="flex-1 bg-gray-50 p-8 overflow-y-auto relative">
+        <!-- Error Alert -->
+        <div id="errorAlert"
+            class="hidden absolute top-4 left-8 right-8 bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-md z-40">
+            <div class="flex w-full justify-between items-start">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800" id="errorTitle">Simulation Failed</h3>
+                        <div class="text-sm text-red-700 mt-1" id="errorMsg">
+                            Something went wrong during the simulation.
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('errorAlert').classList.add('hidden')"
+                    class="text-red-500 hover:text-red-700">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <header class="flex justify-between items-center mb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Virtual Cohorts</h1>
+                <p class="text-gray-500">Manage and analyze your population simulations.</p>
+            </div>
+        </header>
+
+        <!-- Phase Filter Tabs -->
+        <div class="flex gap-2 mb-6 border-b border-gray-200">
+            <button onclick="filterCohorts('all')" id="tab-all"
+                class="filter-tab px-4 py-2 text-sm font-medium text-[#0077a2] border-b-2 border-[#0077a2] hover:text-[#005a7a] transition">
+                All
+            </button>
+            <button onclick="filterCohorts('1')" id="tab-1"
+                class="filter-tab px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition">
+                Phase 1
+            </button>
+            <button onclick="filterCohorts('2')" id="tab-2"
+                class="filter-tab px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition">
+                Phase 2
+            </button>
+            <button onclick="filterCohorts('3')" id="tab-3"
+                class="filter-tab px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition">
+                Phase 3
+            </button>
+        </div>
+
+        <!-- Cohort List -->
+        {% if cohorts %}
+        <div class="grid grid-cols-1 gap-4" id="cohortList">
+            {% for cohort in cohorts %}
+            <!-- Define colors based on Phase (default '1' if missing) -->
+            {% set phase = cohort.demographics.get('phase', '1')|string %}
+            {% set badge_color = 'bg-blue-100 text-blue-700' if phase == '1' else ('bg-purple-100 text-purple-700' if
+            phase == '2' else 'bg-green-100 text-green-700') %}
+            {% set border_color = 'border-blue-200' if phase == '1' else ('border-purple-200' if phase == '2' else
+            'border-green-200') %}
+
+            <div onclick="window.location.href='/projects/{{ project.id }}/cohorts/{{ cohort.id }}'"
+                data-phase="{{ phase }}"
+                class="cohort-item bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition cursor-pointer group relative overflow-hidden">
+
+                <!-- Subtle accent line on hover (Dynamic Color?) -->
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-gray-200 group-hover:bg-[#0077a2] transition-colors">
+                </div>
+
+                <div class="flex justify-between items-start">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-12 h-12 rounded-full flex items-center justify-center font-bold border {{ border_color }} {{ badge_color }}">
+                            P{{ phase }}
+                        </div>
+                        <div>
+                            <h3
+                                class="font-bold text-gray-800 group-hover:text-[#0077a2] transition flex items-center gap-2">
+                                {{ cohort.name }}
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded {{ badge_color }}">
+                                    Phase {{ phase }}
+                                </span>
+                            </h3>
+                            <p class="text-xs text-gray-400 mb-2">{{ cohort.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+
+                            <div class="flex items-center gap-3 text-xs text-gray-600">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded border border-gray-200/50">N={{
+                                    cohort.demographics.n }}</span>
+                                <span class="bg-gray-100 px-2 py-0.5 rounded border border-gray-200/50">Population:
+                                    {{ cohort.demographics['pop'] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <a href="/projects/{{ project.id }}/cohorts/{{ cohort.id }}"
+                            class="text-sm font-medium text-[#0077a2] border border-[#0077a2] px-3 py-1.5 rounded hover:bg-[#0077a2] hover:text-white transition shadow-sm bg-white">View
+                            Results</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State / Placeholder -->
+        <div
+            class="border-2 border-dashed border-gray-300 rounded-xl p-12 flex flex-col items-center justify-center text-center h-[500px]">
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-300">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-600 mb-2">No Cohorts Generated</h3>
+            <p class="text-gray-400 max-w-sm">Select a Clinical Phase and configure parameters to start your first
+                Virtual Clinical Trial.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay"
+    class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
+    <svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1548 1521" class="w-16 h-16 mb-4 animate-spin"
+        style="animation-duration: 2s;">
+        <path fill="#0077a2"
+            d="m1434.3 795.3c0-10.2 0-19.8 0-29.3h-245.7q1.4 14.3 1.4 28.6c0 250.5-199.5 453.4-444.5 453.4-245.8 0-484.7-213.1-498.3-482h-124.6c0-9.5-0.7-19.1-0.7-28.6 0-274.4 157.3-512 384.6-626.3l-45.6-111c-83 40.2-159.3 94.6-226 162.7-151.1 153.9-234.1 358.8-234.1 576 0 217.8 76.9 389.4 216.4 531.7 140.9 143.6 328.1 222.6 528.3 222.6 379.8 0 688.8-313.2 688.8-697.8z" />
+        <path fill="#0077a2"
+            d="m1333.6 267.6c-139.6-142.2-324.7-219.9-522.1-219.9-369 0-670.5 298.9-680.7 670.6q0 1.4 0 3.4 0 8.2 0 16.4 0 10.2 0 19.7h228c0-6.1 0-12.9 0-19.7 0-254.6 202.9-461.6 452.7-461.6 249.8 0 488.7 212.4 507.1 481.3h123.2v8.2c1.4 10.9 1.4 20.4 1.4 29.3 0 274.3-155.2 512.6-381.9 629.7l40.2 96c78.9-39.5 151.1-91.9 214.4-156.6 149.7-152.5 232.1-354.7 232.1-569.8 0-198.8-76.2-386-214.4-527z" />
+    </svg>
+    <h2 class="text-xl font-bold text-gray-800">Generating Virtual Cohort</h2>
+    <p class="text-sm text-gray-500 mt-2">Running Monte Carlo Simulations...</p>
+</div>
+
+<script>
+    // Check for error in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    if (error) {
+        const errorAlert = document.getElementById('errorAlert');
+        const errorMsg = document.getElementById('errorMsg');
+        errorAlert.classList.remove('hidden');
+        if (error === 'sim_failed') {
+            errorMsg.innerText = "Simulation engine failed. Check inputs (MW, CL, Vd) or server logs.";
+        } else {
+            errorMsg.innerText = "An unexpected error occurred: " + error;
+        }
+    }
+
+    // Show spinner on submit
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+    });
+
+    function setMode(mode) {
+        const inputs = ['inputCL', 'inputVD', 'inputMW', 'inputFU'];
+        const btnAuto = document.getElementById('btnAuto');
+        const btnManual = document.getElementById('btnManual');
+
+        if (mode === 'auto') {
+            btnAuto.classList.add('bg-white', 'shadow-sm', 'text-[#0077a2]', 'font-semibold');
+            btnAuto.classList.remove('text-gray-500', 'font-medium');
+            btnManual.classList.remove('bg-white', 'shadow-sm', 'text-[#0077a2]', 'font-semibold');
+            btnManual.classList.add('text-gray-500', 'font-medium');
+
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                el.readOnly = true;
+                el.classList.add('bg-gray-50', 'text-gray-500', 'cursor-not-allowed');
+                el.classList.remove('bg-white', 'text-gray-800');
+                // Restore Auto Value
+                if (el.dataset.autoValue) {
+                    el.value = el.dataset.autoValue;
+                }
+            });
+        } else {
+            btnManual.classList.add('bg-white', 'shadow-sm', 'text-[#0077a2]', 'font-semibold');
+            btnManual.classList.remove('text-gray-500', 'font-medium');
+            btnAuto.classList.remove('bg-white', 'shadow-sm', 'text-[#0077a2]', 'font-semibold');
+            btnAuto.classList.add('text-gray-500', 'font-medium');
+
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                el.readOnly = false;
+                el.classList.remove('bg-gray-50', 'text-gray-500', 'cursor-not-allowed');
+                el.classList.add('bg-white', 'text-gray-800');
+                // Clear Value for fresh input
+                el.value = '';
+            });
+        }
+    }
+</script>
+{% endblock %}

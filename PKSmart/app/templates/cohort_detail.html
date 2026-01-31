@@ -1,0 +1,976 @@
+{% extends "app_base.html" %}
+
+{% block title %}Cohort Analysis - PharmaTwin{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .dashboard-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: box-shadow 0.2s;
+    }
+
+    .dashboard-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #1e293b;
+        letter-spacing: -0.025em;
+    }
+
+    .stat-sub {
+        font-size: 0.875rem;
+        font-weight: 400;
+        color: #94a3b8;
+        margin-left: 0.25rem;
+    }
+
+    /* Gauge Chart Styles */
+    .gauge-container {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .gauge-value {
+        position: absolute;
+        top: 60%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    /* Heatmap Styles (Simple CSS Grid) */
+    .heatmap-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 2px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .heatmap-cell {
+        height: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.75rem;
+        transition: transform 0.2s;
+    }
+
+    .heatmap-cell:hover {
+        transform: scale(1.05);
+        z-index: 10;
+    }
+
+    .section-header {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .text-accent {
+        color: #0077a2;
+    }
+</style>
+{% endblock %}
+
+{% block header_left %}
+<div class="flex items-center gap-4">
+    <a href="/projects/{{ project.id }}/cohorts/new" class="text-gray-400 hover:text-gray-600 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+    </a>
+    <div class="flex items-baseline gap-2">
+        <span class="text-xl font-bold text-gray-800">{{ project.title }}</span>
+        <span class="px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-500 font-mono">ID: {{ project.id }}</span>
+        <span class="text-gray-300">/</span>
+        <span class="text-lg font-medium text-gray-600">{{ cohort.name }}</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+
+    <!-- Traffic Light & Status Badges -->
+    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            {% set phase = cohort.demographics.get('phase', '1')|string %}
+            <!-- Phase Badge -->
+            <span class="px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase 
+                {% if phase == '1' %} bg-blue-100 text-blue-700
+                {% elif phase == '2' %} bg-purple-100 text-purple-700
+                {% else %} bg-green-100 text-green-700 {% endif %}">
+                Phase {{ phase }}
+            </span>
+            <h1 class="text-2xl font-bold text-gray-900">{{ cohort.name }}</h1>
+        </div>
+
+        <!-- Action Badges (Traffic Light System) -->
+        <div class="flex gap-2">
+            <!-- Safety Badge -->
+            <div class="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg shadow-sm">
+                <div class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                <div class="flex flex-col leading-none">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase">안전성 (Safety)</span>
+                    <span class="text-sm font-bold text-green-700">우수 (Safe)</span>
+                </div>
+            </div>
+            <!-- Efficacy Badge -->
+            <div class="flex items-center gap-2 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-lg shadow-sm">
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div class="flex flex-col leading-none">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase">효과성 (Efficacy)</span>
+                    <span class="text-sm font-bold text-yellow-700">보통 (Moderate)</span>
+                </div>
+            </div>
+            <!-- Dose Badge -->
+            <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                <div class="flex flex-col leading-none">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase">권장 용량</span>
+                    <span class="text-sm font-bold text-blue-700">100 mg</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Summary Card (Easy Interpretation) -->
+    <div
+        class="bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl p-6 mb-8 shadow-sm relative overflow-hidden">
+        <div
+            class="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 transform translate-x-1/2 -translate-y-1/2">
+        </div>
+
+        <div class="flex items-start gap-4 relative z-10">
+            <div class="p-3 bg-white rounded-lg shadow-sm text-yellow-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Executive Summary (한 줄 요약)
+                </h3>
+                <p class="text-lg font-medium text-gray-800 leading-relaxed">
+                    {% if phase == '1' %}
+                    "이 약물은 <span class="text-green-600 font-bold">안전성(Safety)이 우수</span>하여 독성 위험이 낮지만, 약효 유지를 위해
+                    <span class="text-blue-600 font-bold">용량 증량</span>이 필요할 수 있습니다."
+                    {% elif phase == '2' %}
+                    "목표 효능을 달성할 확률이 <span class="text-purple-600 font-bold">78%로 높음</span>이 확인되었으며,
+                    <span class="text-blue-600 font-bold">100mg</span> 투여 시 가장 균형 잡힌 효과를 보입니다."
+                    {% else %}
+                    "기존 치료제 대비 <span class="text-green-600 font-bold">사망 위험을 28% 감소</span>시키는 효과가 통계적으로 입증되었습니다."
+                    {% endif %}
+                </p>
+                <div class="mt-3 flex gap-2">
+                    <span class="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded">💡 AI Analysis based on {{
+                        cohort.demographics.n }} virtual patients</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHASE 1: SAFETY DASHBOARD -->
+    {% if phase == '1' %}
+    <div class="space-y-8 animate-fade-in">
+        <!-- P1 Summary (Metrics with Tooltips) -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Toxicity Prob -->
+            <div class="dashboard-card border-t-4 border-green-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Max Toxicity Prob</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-green-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>독성 발생 확률</strong><br>약물 투여 시 심각한 부작용이 발생할 최대 확률입니다. <br><span
+                                class="text-green-300">20% 미만이어야 안전합니다.</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value text-green-600">12.5%</p>
+                <p class="stat-sub text-green-500 text-xs bg-green-50 px-2 py-1 rounded inline-block mt-1">✓ Low Risk
+                    (Safe)</p>
+            </div>
+
+            <!-- Cmax -->
+            <div class="dashboard-card border-t-4 border-blue-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Mean Cmax (ng/mL)</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-blue-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>최고 혈중 농도</strong><br>약물이 몸에 가장 많이 퍼졌을 때의 농도입니다.
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value">840.2</p>
+                <p class="stat-sub text-gray-400">± 124.5 SD</p>
+            </div>
+
+            <!-- Safety Margin -->
+            <div class="dashboard-card border-t-4 border-yellow-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Safety Margin</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-yellow-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>안전 마진</strong><br>독성 농도까지 얼마나 여유가 있는지 보여줍니다.<br><span class="text-yellow-300">10배
+                                이상을 목표로 합니다.</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value">5.2<span class="text-lg">x</span></p>
+                <p class="stat-sub text-yellow-600 text-xs bg-yellow-50 px-2 py-1 rounded inline-block mt-1">⚠ Attention
+                    Required</p>
+            </div>
+
+            <!-- Half Life -->
+            <div class="dashboard-card border-t-4 border-gray-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Half-Life (t1/2)</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-gray-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>반감기</strong><br>약물의 농도가 반으로 줄어드는 시간입니다. 하루 복용 횟수를 결정합니다.
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value">6.4<span class="text-lg">h</span></p>
+                <p class="stat-sub text-gray-400">Twice Daily (BID)</p>
+            </div>
+        </section>
+
+        <!-- P1 Visualization: Organ Map & Safety Curve -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- (LEFT) Human Organ Map SVG -->
+            <div class="dashboard-card relative overflow-hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                        약물 분포 지도 (Organ Map)
+                    </h3>
+                    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded border">PBPK Simulation</span>
+                </div>
+
+                <div
+                    class="flex items-center justify-center h-[350px] bg-gray-50/50 rounded-xl relative border border-dashed border-gray-200">
+                    <!-- Conceptual Diagram SVG -->
+                    <svg width="300" height="300" viewBox="0 0 300 300" class="w-full h-full max-w-[350px]">
+                        <!-- Connections -->
+                        <path d="M150 60 L150 120" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="6,4"
+                            class="animate-pulse" /> <!-- Oral -> Stomach -->
+                        <path d="M150 160 L100 220" stroke="#CBD5E1" stroke-width="2" /> <!-- Stomach -> Liver -->
+                        <path d="M100 220 L200 220" stroke="#CBD5E1" stroke-width="2" /> <!-- Liver -> Kidney -->
+                        <line x1="150" y1="140" x2="150" y2="280" stroke="#E2E8F0" stroke-width="150"
+                            stroke-opacity="0.1" /> <!-- Body BG -->
+
+                        <!-- STOMACH (Absorption) -->
+                        <g transform="translate(130, 120)">
+                            <circle cx="20" cy="20" r="25" fill="#BFDBFE" stroke="#3B82F6" stroke-width="2" />
+                            <text x="20" y="24" text-anchor="middle" font-size="10" font-weight="bold"
+                                fill="#1E40AF">Absorption</text>
+                            <text x="20" y="60" text-anchor="middle" font-size="9" fill="#64748B">Fast (Ka=1.2)</text>
+                        </g>
+
+                        <!-- BLOOD (Central) -->
+                        <g transform="translate(130, 20)">
+                            <rect x="-10" y="0" width="60" height="40" rx="10" fill="#FECACA" stroke="#EF4444"
+                                stroke-width="2" />
+                            <text x="20" y="24" text-anchor="middle" font-size="10" font-weight="bold"
+                                fill="#991B1B">Blood</text>
+                        </g>
+
+                        <!-- LIVER (Metabolism) -->
+                        <g transform="translate(60, 200)">
+                            <!-- Kidney Shape -->
+                            <path d="M10,10 Q40,10 40,30 Q40,50 10,50 Q-20,50 -20,30 Q-20,10 10,10" fill="#FDE68A"
+                                stroke="#D97706" stroke-width="2" />
+                            <text x="10" y="35" text-anchor="middle" font-size="10" font-weight="bold"
+                                fill="#92400E">Liver</text>
+                            <text x="10" y="65" text-anchor="middle" font-size="9" fill="#D97706">High Metab.</text>
+                        </g>
+
+                        <!-- KIDNEY (Excretion) -->
+                        <g transform="translate(180, 200)">
+                            <path d="M10,10 Q40,10 40,30 Q40,50 10,50 Q-20,50 -20,30 Q-20,10 10,10" fill="#BBF7D0"
+                                stroke="#16A34A" stroke-width="2" />
+                            <text x="10" y="35" text-anchor="middle" font-size="10" font-weight="bold"
+                                fill="#166534">Kidney</text>
+                            <text x="10" y="65" text-anchor="middle" font-size="9" fill="#166534">Clearance</text>
+                        </g>
+                    </svg>
+
+                    <!-- Legend -->
+                    <div class="absolute bottom-4 right-4 bg-white/90 p-2 rounded border shadow-sm text-[10px]">
+                        <div class="flex items-center gap-1 mb-1"><span class="w-2 h-2 rounded-full bg-red-400"></span>
+                            High Conc.</div>
+                        <div class="flex items-center gap-1 "><span class="w-2 h-2 rounded-full bg-yellow-300"></span>
+                            Med Conc.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- (RIGHT) PK Profile vs Safety Threshold -->
+            <div class="dashboard-card h-[430px]">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-red-500 rounded-full"></span>
+                        약물 농도 vs 안전 한계선
+                    </h3>
+                    <div class="relative group">
+                        <svg class="w-5 h-5 text-gray-400 cursor-help" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-64 bg-gray-900 text-white text-xs p-3 rounded shadow-lg hidden group-hover:block z-50">
+                            파란 선(혈중 농도)이 빨간 점선(독성 한계)을 넘지 않아야 안전합니다.
+                        </div>
+                    </div>
+                </div>
+                <canvas id="p1PkChart"></canvas>
+            </div>
+
+        </section>
+
+        <!-- P1 Bottom: DLT Probability -->
+        <section class="dashboard-card">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-4">
+                <span class="w-1.5 h-6 bg-purple-600 rounded-full"></span>
+                심각한 부작용 발생 확률 (DLT Probability)
+            </h3>
+            <div class="h-[300px]">
+                <canvas id="p1MtdChart"></canvas>
+            </div>
+        </section>
+    </div>
+    {% endif %}
+
+    <!-- PHASE 2: EFFICACY DASHBOARD -->
+    {% if phase == '2' %}
+    <div class="space-y-8 animate-fade-in">
+
+        <!-- P2 Summary (Metrics with Tooltips) -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Success Prob -->
+            <div class="dashboard-card border-t-4 border-purple-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Success Prob (PoC)</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-purple-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>임상 성공 확률</strong><br>약물이 목표 효능을 달성할 통계적 확률입니다. <br><span class="text-purple-300">70%
+                                이상이면 유망합니다.</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value text-purple-600">78.4%</p>
+                <p class="stat-sub text-purple-500 text-xs bg-purple-50 px-2 py-1 rounded inline-block mt-1">✓ High
+                    Confidence</p>
+            </div>
+
+            <!-- Target Occupancy -->
+            <div class="dashboard-card border-t-4 border-indigo-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Avg. Target Occ.</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-indigo-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>표적 결합률</strong><br>약물이 치료 목표(수용체 등)에 얼마나 잘 달라붙는지 보여줍니다.<br><span
+                                class="text-indigo-300">80% 이상을 목표로 합니다.</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value" id="val_mean_to">85.3%</p>
+                <p class="stat-sub text-gray-400">Target > 80%</p>
+            </div>
+
+            <!-- ED50 -->
+            <div class="dashboard-card border-t-4 border-green-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">ED50 (mg)</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-green-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>유효 용량 (50%)</strong><br>환자의 절반에게서 효과가 나타나는 용량입니다. 낮을수록 적은 양으로도 효과가 좋습니다.
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value">45.2</p>
+                <p class="stat-sub text-gray-400">Low Dose (Potent)</p>
+            </div>
+
+            <!-- Responder Rate -->
+            <div class="dashboard-card border-t-4 border-pink-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Responder Rate</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-pink-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>반응률</strong><br>약물 복용 후 상태가 호전된 환자의 비율입니다.
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value">62%</p>
+                <p class="stat-sub text-gray-400">N = {{ cohort.demographics.n }}</p>
+            </div>
+        </section>
+
+        <!-- P2 Main Charts -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- (LEFT) Waterfall Plot -->
+            <div class="dashboard-card h-[450px]">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                        개별 환자 반응 (Waterfall Plot)
+                    </h3>
+                    <div class="relative group">
+                        <svg class="w-5 h-5 text-gray-400 cursor-help" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-64 bg-gray-900 text-white text-xs p-3 rounded shadow-lg hidden group-hover:block z-50">
+                            각 막대는 한 명의 환자를 의미합니다. <br>기준선(0%) 아래로 내려갈수록 종양 크기가 감소(치료 효과 좋음)한 것입니다.
+                        </div>
+                    </div>
+                </div>
+                <canvas id="p2WaterfallChart"></canvas>
+            </div>
+
+            <!-- (RIGHT) Dose-Response Curve -->
+            <div class="dashboard-card h-[450px]">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-purple-500 rounded-full"></span>
+                        용량 반응 곡선 (Dose-Response)
+                    </h3>
+                    <div class="relative group">
+                        <svg class="w-5 h-5 text-gray-400 cursor-help" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-64 bg-gray-900 text-white text-xs p-3 rounded shadow-lg hidden group-hover:block z-50">
+                            용량을 늘릴수록 효과가 어떻게 커지는지 보여줍니다. <br>어느 지점에서 효과가 포화(Plateau)되는지 확인하세요.
+                        </div>
+                    </div>
+                </div>
+                <canvas id="p2EmaxChart"></canvas>
+            </div>
+
+        </section>
+
+        <!-- P2 Waterfall & Scatter -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="dashboard-card h-[350px]">
+                <h3 class="text-sm font-bold text-gray-700 mb-4">Individual Responder Waterfall Plot</h3>
+                <canvas id="p2WaterfallChart"></canvas>
+            </div>
+            <div class="dashboard-card h-[350px]">
+                <h3 class="text-sm font-bold text-gray-700 mb-4">체내 약물 농도와 효과의 상관관계 (PK/PD Correlation)</h3>
+                <canvas id="p2PkPdChart"></canvas>
+            </div>
+        </section>
+    </div>
+    {% endif %}
+
+    <!-- PHASE 3: CONFIRMATORY DASHBOARD -->
+    <!-- PHASE 3: CONFIRMATORY DASHBOARD -->
+    {% if phase == '3' %}
+    <div class="space-y-8 animate-fade-in">
+
+        <!-- P3 Summary (Metrics with Tooltips) -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Hazard Ratio -->
+            <div class="dashboard-card border-t-4 border-blue-600 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Hazard Ratio (HR)</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-blue-600 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>위험비 (Hazard Ratio)</strong><br>대조군 대비 사망/재발 위험이 얼마나 줄었는지 보여줍니다.<br><span
+                                class="text-blue-300">0.72는 위험이 28% 감소했다는 뜻입니다.</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value text-blue-700">0.72</p>
+                <p class="stat-sub text-gray-400">CI [0.65 - 0.81]</p>
+            </div>
+
+            <!-- Study Power -->
+            <div class="dashboard-card border-t-4 border-green-600 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">Study Power</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-green-600 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>검정력 (Power)</strong><br>실제 효과가 있을 때, 이를 통계적으로 입증할 확률입니다.<br><span
+                                class="text-green-300">90% 이상이면 임상 성공 가능성이 매우 높습니다.</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value text-green-700">92%</p>
+                <p class="stat-sub text-green-600 text-xs bg-green-50 px-2 py-1 rounded inline-block mt-1">✓ Adequate
+                    Sample (N={{ cohort.demographics.n }})</p>
+            </div>
+
+            <!-- p-value -->
+            <div class="dashboard-card border-t-4 border-orange-500 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">p-value</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-orange-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>유의확률 (p-value)</strong><br>결과가 우연일 확률입니다. <br><span class="text-orange-300">0.05
+                                미만이어야 통계적으로 의미가 있습니다 (성공).</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value">
+                    < 0.001</p>
+                        <p class="stat-sub text-orange-600 text-xs bg-orange-50 px-2 py-1 rounded inline-block mt-1">★
+                            Highly Significant</p>
+            </div>
+
+            <!-- NNT -->
+            <div class="dashboard-card border-t-4 border-gray-600 group relative p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="stat-label text-gray-500">NNT</p>
+                    <div class="relative group/tooltip">
+                        <svg class="w-4 h-4 text-gray-300 cursor-help hover:text-gray-500 transition" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-56 bg-gray-800 text-white text-xs p-3 rounded shadow-xl hidden group-hover/tooltip:block z-50">
+                            <strong>치료 필요 환자 수</strong><br>한 명의 효과를 보기 위해 몇 명을 치료해야 하는지 보여줍니다. 낮을수록 경제적입니다.
+                        </div>
+                    </div>
+                </div>
+                <p class="stat-value">8</p>
+                <p class="stat-sub text-gray-400">Patients per Benefit</p>
+            </div>
+        </section>
+
+        <!-- P3 Charts: KM & Power -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- KM Curve (Occupies 2/3) -->
+            <div class="dashboard-card lg:col-span-2 h-[450px]">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-green-500 rounded-full"></span>
+                        생존 곡선 (Kaplan-Meier survival)
+                    </h3>
+                    <div class="relative group">
+                        <svg class="w-5 h-5 text-gray-400 cursor-help" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div
+                            class="absolute bottom-full right-0 mb-2 w-64 bg-gray-900 text-white text-xs p-3 rounded shadow-lg hidden group-hover:block z-50">
+                            신약 투여군(초록색)이 위약군(회색)보다 위에 위치할수록 생존율이 높다는 뜻입니다.
+                        </div>
+                    </div>
+                </div>
+                <canvas id="p3KmChart"></canvas>
+            </div>
+
+            <!-- Power Curve -->
+            <div class="dashboard-card h-[450px]">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-orange-500 rounded-full"></span>
+                        임상 검정력 (Power)
+                    </h3>
+                </div>
+                <canvas id="p3PowerChart"></canvas>
+            </div>
+        </section>
+
+        <!-- P3 Swimmer Plot -->
+        <section class="dashboard-card">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-4">
+                <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+                환자별 반응 지속 기간 (Swimmer Plot)
+            </h3>
+            <div class="h-[300px]">
+                <canvas id="p3SwimmerChart"></canvas>
+            </div>
+        </section>
+
+    </div>
+    {% endif %}
+
+    <!-- Shared Charts Logic -->
+    <script>
+        // Shared Data processing
+        const rawResults = {{ cohort.results_json | tojson }};
+        const currentPhase = "{{ phase }}";
+
+        // Setup Charts based on Phase
+        document.addEventListener('DOMContentLoaded', () => {
+            if (currentPhase === '1') renderPhase1Charts();
+            if (currentPhase === '2') renderPhase2Charts();
+            if (currentPhase === '3') renderPhase3Charts();
+        });
+
+        function renderPhase1Charts() {
+            // Mock P1 Data
+            const ctxPK = document.getElementById('p1PkChart').getContext('2d');
+            new Chart(ctxPK, {
+                type: 'line',
+                data: {
+                    labels: [0, 2, 4, 6, 8, 12, 24, 48, 72],
+                    datasets: [{
+                        label: 'Mean Conc. (100mg)',
+                        data: [0, 450, 840, 620, 400, 200, 50, 10, 0],
+                        borderColor: '#3b82f6',
+                        tension: 0.4
+                    }, {
+                        label: 'Safety Threshold',
+                        data: Array(9).fill(1000),
+                        borderColor: '#ef4444',
+                        borderDash: [5, 5],
+                        borderWidth: 2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctxMTD = document.getElementById('p1MtdChart').getContext('2d');
+            new Chart(ctxMTD, {
+                type: 'line',
+                data: {
+                    labels: [10, 50, 100, 200, 500, 1000],
+                    datasets: [{
+                        label: 'Prob. of DLT',
+                        data: [0.01, 0.05, 0.12, 0.35, 0.60, 0.85],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 1, title: { display: true, text: 'Probability' } }, x: { title: { display: true, text: 'Dose (mg)' } } }
+                }
+            });
+        }
+
+        function renderPhase2Charts() {
+            // Compute simple stats for P2
+            const n = rawResults.length;
+            const totalAvgTO = rawResults.reduce((sum, r) => sum + (r.mean_to || 0), 0) / (n || 1);
+            const el = document.getElementById('val_mean_to');
+            if (el) el.innerHTML = `${totalAvgTO.toFixed(1)}<span class="stat-sub">%</span>`;
+
+            // 1. Waterfall Plot (Individual Response)
+            // Generate mock response data if rawResults is empty or doesn't have response data
+            // In a real app, this would use cohort.results_json['response_rate']
+            let waterData = [];
+            if (n > 0 && rawResults[0].response_change) {
+                waterData = rawResults.map(r => r.response_change).sort((a, b) => b - a); // Sort descending
+            } else {
+                // Mock data for demo: 50 patients, range -100 to +40%
+                waterData = Array.from({ length: 50 }, () => (Math.random() * 140 - 100)).sort((a, b) => b - a);
+            }
+
+            const ctxWater = document.getElementById('p2WaterfallChart').getContext('2d');
+            new Chart(ctxWater, {
+                type: 'bar',
+                data: {
+                    labels: waterData.map((_, i) => i + 1),
+                    datasets: [{
+                        label: '% Change from Baseline',
+                        data: waterData,
+                        backgroundColor: waterData.map(v => {
+                            if (v < -30) return '#22c55e'; // Green (Good response)
+                            if (v > 20) return '#ef4444';  // Red (Progression)
+                            return '#94a3b8';              // Grey (Stable)
+                        }),
+                        borderRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `Change: ${ctx.raw.toFixed(1)}%`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: '% Tumor Size Change' },
+                            grid: { color: (ctx) => ctx.tick.value === 0 ? '#000' : '#e2e8f0' } // Bold zero line
+                        },
+                        x: { display: false } // Hide patient IDs for clean look
+                    }
+                }
+            });
+
+            // 2. Dose-Response (Emax)
+            const ctxEmax = document.getElementById('p2EmaxChart').getContext('2d');
+            new Chart(ctxEmax, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Clinical Observations',
+                        data: Array.from({ length: 40 }, () => ({
+                            x: Math.random() * 200,
+                            y: Math.min(100, Math.random() * 30 + (100 * (Math.random() * 200) / (50 + (Math.random() * 200))))
+                        })),
+                        backgroundColor: 'rgba(168, 85, 247, 0.5)' // Purple
+                    }, {
+                        label: 'Emax Prediction',
+                        data: Array.from({ length: 100 }, (_, i) => {
+                            const x = i * 2;
+                            return { x, y: (100 * x) / (45.2 + x) }; // Emax model with ED50=45.2
+                        }),
+                        type: 'line',
+                        borderColor: '#6b21a8',
+                        borderWidth: 3,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Dose (mg)' } },
+                        y: { title: { display: true, text: 'Efficacy (% Response)' }, min: 0, max: 110 }
+                    }
+                }
+            });
+        }
+
+        function renderPhase3Charts() {
+            // 1. Kaplan-Meier Survival Analysis
+            const ctxKM = document.getElementById('p3KmChart').getContext('2d');
+            new Chart(ctxKM, {
+                type: 'line',
+                data: {
+                    labels: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24],
+                    datasets: [{
+                        label: 'Experimental Drug (Treatment)',
+                        data: [100, 99, 97, 95, 93, 91, 89, 88, 87, 86, 85, 84],
+                        borderColor: '#16a34a', // Green
+                        backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                        borderWidth: 3,
+                        stepped: true,
+                        fill: false
+                    }, {
+                        label: 'Placebo (Control)',
+                        data: [100, 96, 90, 85, 78, 70, 62, 55, 48, 42, 38, 35],
+                        borderColor: '#9ca3af', // Grey
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        stepped: true,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { title: { display: true, text: 'Survival Probability (%)' }, min: 0, max: 105 },
+                        x: { title: { display: true, text: 'Time (Months)' } }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+
+            // 2. Power Analysis Curve
+            const ctxPower = document.getElementById('p3PowerChart').getContext('2d');
+            new Chart(ctxPower, {
+                type: 'line',
+                data: {
+                    labels: [100, 200, 300, 400, 500, 600, 800, 1000],
+                    datasets: [{
+                        label: 'Statistical Power (%)',
+                        data: [30, 45, 60, 75, 85, 90, 95, 98],
+                        borderColor: '#f97316', // Orange
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Target Power (80%)',
+                        data: Array(8).fill(80),
+                        borderColor: '#dc2626',
+                        borderDash: [5, 5],
+                        borderWidth: 1,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { title: { display: true, text: 'Power (%)' }, min: 0, max: 100 },
+                        x: { title: { display: true, text: 'Sample Size (N)' } }
+                    }
+                }
+            });
+
+            // 3. Swimmer Plot (Individual Subject Duration)
+            const ctxSwimmer = document.getElementById('p3SwimmerChart').getContext('2d');
+            // Mock Data: 20 patients
+            const swimmerData = Array.from({ length: 20 }, (_, i) => ({
+                id: i + 1,
+                duration: 5 + Math.random() * 20,
+                status: Math.random() > 0.7 ? 'Complete Response' : (Math.random() > 0.4 ? 'Partial Response' : 'Stable Disease')
+            })).sort((a, b) => b.duration - a.duration);
+
+            new Chart(ctxSwimmer, {
+                type: 'bar',
+                data: {
+                    labels: swimmerData.map(d => `Patient ${d.id}`),
+                    datasets: [{
+                        label: 'Duration of Response (Months)',
+                        data: swimmerData.map(d => d.duration),
+                        backgroundColor: swimmerData.map(d => {
+                            if (d.status === 'Complete Response') return '#16a34a'; // Green
+                            if (d.status === 'Partial Response') return '#3b82f6'; // Blue
+                            return '#fbbf24'; // Yellow
+                        }),
+                        borderRadius: 4,
+                        barThickness: 10
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const d = swimmerData[ctx.dataIndex];
+                                    return `${d.status}: ${d.duration.toFixed(1)} months`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Months on Treatment' } },
+                        y: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</main>
+{% endblock %}

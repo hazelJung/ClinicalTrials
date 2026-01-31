@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}PharmaTwin - Certara{% endblock %}
+
+{% block body_class %}min-h-screen flex bg-slate-900{% endblock %}
+
+{% block body %}
+<!-- Left Side: Background Image (60%) -->
+<div class="w-full lg:w-3/5 relative min-h-screen flex flex-col justify-between p-8 lg:p-12"
+    style="background: url('/static/certara_bg.jpg') center center / cover no-repeat;">
+
+    <!-- Overlay for better text readability -->
+    <div class="absolute inset-0 bg-gradient-to-r from-[#003d5c]/30 to-transparent"></div>
+
+    <!-- Top: Empty for balance -->
+    <div></div>
+
+    <!-- Center: Main Content -->
+    <div class="relative z-10 text-center lg:text-left max-w-lg mx-auto lg:mx-0">
+        <!-- Product Name -->
+        <h1 class="text-5xl lg:text-6xl font-bold text-white mb-2 tracking-tight drop-shadow-lg">
+            PharmaTwin<span class="text-emerald-400 align-super text-2xl">®</span>
+        </h1>
+        <p class="text-lg lg:text-xl text-white/80 uppercase tracking-[0.3em] font-light drop-shadow-md">
+            AI Prediction Platform
+        </p>
+    </div>
+
+    <!-- Footer Links -->
+    <div class="relative z-10 flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-white/70">
+        <a href="#" class="hover:text-white transition">About</a>
+        <a href="#" class="hover:text-white transition">Help Center</a>
+        <a href="#" class="hover:text-white transition">Terms of Service</a>
+        <a href="#" class="hover:text-white transition">Privacy Policy</a>
+    </div>
+</div>
+
+<!-- Right Side: Login Section (40%) -->
+<div class="hidden lg:flex w-2/5 bg-slate-50 flex-col items-center justify-center p-12 relative">
+
+    <!-- Main Content -->
+    <div class="w-full max-w-sm text-center">
+
+        <!-- Certara Logo -->
+        <div class="mb-8">
+            <img src="/static/certara_full_logo.svg" alt="Certara" class="h-12 mx-auto mb-4">
+            <p class="text-slate-500 text-sm">Biosimulation & Regulatory Science</p>
+        </div>
+
+        <!-- Message -->
+        <p class="text-slate-600 mb-8">
+            If you already have an account, click below to Login
+        </p>
+
+        <!-- Login Button -->
+        <a href="/login"
+            class="block w-full bg-[#0077a2] hover:bg-[#005a7a] text-white font-semibold py-4 rounded-full transition shadow-lg shadow-[#0077a2]/20 uppercase tracking-wider text-sm">
+            Log In
+        </a>
+
+        <!-- Signup Link -->
+        <p class="mt-6 text-slate-500 text-sm">
+            Don't have an account?
+            <a href="/signup" class="text-[#0077a2] hover:text-[#005a7a] font-medium">Create one</a>
+        </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="absolute bottom-8 text-center text-xs text-slate-400">
+        © 2008-2026 Certara, Inc. All rights reserved.
+    </div>
+</div>
+
+<!-- Mobile: Show login button overlay -->
+<div
+    class="lg:hidden fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent">
+    <a href="/login"
+        class="block w-full bg-[#0077a2] hover:bg-[#005a7a] text-white font-semibold py-4 rounded-full transition shadow-lg shadow-[#0077a2]/30 uppercase tracking-wider text-sm text-center">
+        Log In
+    </a>
+    <p class="mt-4 text-white/60 text-center text-sm">
+        Don't have an account?
+        <a href="/signup" class="text-emerald-400 hover:text-emerald-300 font-medium">Create one</a>
+    </p>
+    <p class="mt-4 text-white/40 text-center text-xs">
+        © 2008-2026 Certara, Inc. All rights reserved.
+    </p>
+</div>
+{% endblock %}

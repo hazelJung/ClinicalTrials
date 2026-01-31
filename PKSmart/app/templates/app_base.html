@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    /* Sidebar Icons */
+    .sidebar-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        color: #64748b;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .sidebar-icon:hover {
+        background-color: #f1f5f9;
+        color: #0077a2;
+    }
+
+    .sidebar-icon.active {
+        background-color: #E4EAED;
+        color: #0077a2;
+        /* Removed border for consistency */
+    }
+
+    /* Wide Sidebar Nav Item */
+    .nav-item.active {
+        background-color: #E4EAED;
+        color: #0077a2;
+        /* Match Compact Active Color */
+    }
+
+    .nav-item:hover:not(.active) {
+        background-color: #f1f5f9;
+        color: #0077a2;
+        /* Match Compact Hover Color */
+    }
+
+    /* Tooltip logic for Compact mode */
+    .tooltip-container {
+        position: relative;
+    }
+
+    .tooltip-text {
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        left: 120%;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #1e293b;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 50;
+        transition: 0.2s;
+    }
+
+    .tooltip-container:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="flex min-h-screen">
+    <!-- DEBUG: sidebar_mode={{ sidebar_mode }} -->
+
+    <!-- Mobile Hamburger (Visible only on small screens) -->
+    <div class="lg:hidden fixed top-0 left-0 p-4 z-50">
+        <button onclick="document.getElementById('mobileSidebar').classList.toggle('-translate-x-full')"
+            class="text-gray-600 bg-white p-2 rounded shadow">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar Logic -->
+    {% set is_compact_view = (is_compact is defined and is_compact) or (sidebar_mode is defined and sidebar_mode ==
+    'compact') %}
+
+    <!-- Sidebar Container -->
+    <aside id="desktopSidebar" class="hidden lg:flex flex-col border-r border-gray-200 bg-white h-screen fixed z-30 transition-all duration-300
+                  {{ 'w-16 items-center py-4' if is_compact_view else 'w-72 justify-between' }}">
+
+        {% if is_compact_view %}
+        <!-- COMPACT SIDEBAR CONTENT -->
+        <div class="flex flex-col items-center gap-2 w-full pt-4">
+            <!-- Home -->
+            <a href="/dashboard" class="sidebar-icon tooltip-container" title="Home">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span class="tooltip-text">Dashboard</span>
+            </a>
+
+            <!-- Project Active (Only if project context exists) -->
+            {% if project %}
+            <a href="/projects/{{ project.id }}" class="sidebar-icon active tooltip-container">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                <span class="tooltip-text">{{ project.title }}</span>
+            </a>
+            {% endif %}
+
+            <!-- Common Tools -->
+            <a href="/dashboard/share" class="sidebar-icon tooltip-container">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                <span class="tooltip-text">Share</span>
+            </a>
+
+            <a href="/dashboard/users" class="sidebar-icon tooltip-container">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span class="tooltip-text">Users</span>
+            </a>
+        </div>
+
+        <div class="mt-auto pb-4 flex flex-col items-center gap-2 w-full">
+            <!-- Bottom Icons -->
+            <a href="#" class="sidebar-icon tooltip-container" title="Deleted Objects">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </a>
+            <div class="pt-2 border-t w-full flex justify-center">
+                <img src="/static/certara_full_logo_small.svg" alt="Certara" class="h-8 w-8 object-contain opacity-50">
+            </div>
+        </div>
+
+        {% else %}
+        <!-- WIDE SIDEBAR CONTENT -->
+        <div class="p-4 w-full">
+            <nav class="space-y-1">
+                <a href="/dashboard"
+                    class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ 'active' if request.url.path == '/dashboard' else 'text-gray-600' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Home
+                </a>
+                <a href="/dashboard/share"
+                    class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ 'active' if '/share' in request.url.path else 'text-gray-600' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Share Summary
+                </a>
+                <a href="/dashboard/users"
+                    class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ 'active' if '/users' in request.url.path else 'text-gray-600' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    User Management
+                </a>
+            </nav>
+
+            <!-- Extra Filters Block (Optional) -->
+            {% block sidebar_extra %}{% endblock %}
+
+            <div class="mt-8 pt-4 border-t border-gray-200">
+                <a href="#"
+                    class="flex items-center gap-3 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Deleted Objects
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-gray-200 w-full mt-auto">
+            <img src="/static/certara_full_logo.svg" alt="Certara" class="h-8 mx-auto opacity-60">
+            <p class="text-xs text-gray-400 text-center mt-2">© 2008-2026 Certara, Inc.</p>
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- Mobile Sidebar Drawer (simplified copy) -->
+    <aside id="mobileSidebar"
+        class="lg:hidden fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-50 transform -translate-x-full transition-transform duration-300">
+        <div class="p-4 flex justify-between items-center border-b">
+            <span class="font-bold text-[#0077a2]">Menu</span>
+            <button onclick="document.getElementById('mobileSidebar').classList.add('-translate-x-full')">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <nav class="p-4 space-y-2">
+            <a href="/dashboard" class="block px-4 py-2 rounded hover:bg-gray-100">Home</a>
+            <a href="/dashboard/share" class="block px-4 py-2 rounded hover:bg-gray-100">Share Summary</a>
+            <a href="/dashboard/users" class="block px-4 py-2 rounded hover:bg-gray-100">Users</a>
+            {% if project %}
+            <div class="border-t my-2 pt-2">
+                <p class="px-4 text-xs text-gray-500">Project: {{ project.title }}</p>
+                <a href="/projects/{{ project.id }}"
+                    class="block px-4 py-2 rounded hover:bg-gray-100 font-bold text-[#0077a2]">Current Project</a>
+            </div>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div
+        class="flex-1 flex flex-col min-h-screen transition-all duration-300 {{ 'ml-0 lg:ml-16' if is_compact_view else 'ml-0 lg:ml-72' }}">
+
+        <!-- Header -->
+        <header
+            class="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-20 shrink-0">
+            <div class="flex items-center gap-4">
+                {% block header_left %}
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-bold text-[#0077a2]">PharmaTwin</span>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider hidden sm:inline">AI PREDICTION
+                        PLATFORM</span>
+                </div>
+                {% endblock %}
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- Notifications (simplified) -->
+                <button class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                </button>
+
+                <!-- Profile -->
+                <div class="flex items-center gap-2 pl-4 border-l border-gray-200">
+                    <div
+                        class="w-8 h-8 rounded-full bg-[#0077a2] text-white flex items-center justify-center text-sm font-medium">
+                        {{ user.email[0]|upper if user else '?' }}
+                    </div>
+                    <a href="/logout" class="text-sm text-gray-500 hover:text-gray-700">Sign Out</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content -->
+        {% block content %}{% endblock %}
+
+    </div>
+</div>
+{% endblock %}

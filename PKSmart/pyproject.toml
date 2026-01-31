@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pksmart"
+version = "0.1.0"
+description = "PKSmart: Pharmacokinetics Prediction"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "scikit-learn",
+    "matplotlib",
+    "tqdm",
+    "rdkit",
+    "mordredcommunity",
+    "joblib",
+]
