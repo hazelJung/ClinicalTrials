@@ -1,0 +1,71 @@
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:35:14] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+[14:36:25] Can't kekulize mol.  Unkekulized atoms: 4
+============================================================
+  QSAR Model Validation Report (ClinTox Dataset)
+============================================================
+
+[1] Dataset Summary
+    Total drugs: 1484
+    FDA Approved: 1390 (93.7%)
+    Clinical Toxicity: 112 (7.5%)
+
+[2] Loading QSAR Models...
+    Models loaded: 12
+    Endpoints: ['NR-AhR', 'NR-AR-LBD', 'NR-Aromatase', 'NR-AR', 'NR-ER-LBD', 'NR-ER', 'NR-PPAR-gamma', 'SR-ARE', 'SR-ATAD5', 'SR-HSE', 'SR-MMP', 'SR-p53']
+
+[3] Running Predictions...
+    Processed: 498/500
+    Failed: 2
+
+[4] Performance Metrics (Predicting Clinical Toxicity)
+    Accuracy:  70.3%
+    Precision: 0.127
+    Recall:    0.429
+    F1 Score:  0.196
+
+    Confusion Matrix:
+                 Pred Safe   Pred Toxic
+    True Safe       332         124
+    True Toxic       24          18
+
+[5] Risk Level Distribution
+    LOW: 294 (59.0%)
+    MEDIUM: 103 (20.7%)
+    HIGH: 86 (17.3%)
+    CRITICAL: 15 (3.0%)
+
+[6] Risk Level vs Clinical Toxicity
+          Non-Toxic  Toxic  Total
+CRITICAL         13      2     15
+HIGH             75     11     86
+LOW             280     14    294
+MEDIUM           88     15    103
+Total           456     42    498
+
+    Results saved to: data\processed\qsar_clintox_validation.csv
+
+============================================================
+  Validation Complete
+============================================================

@@ -1,0 +1,15 @@
+============================================================
+  REAL DATA VALIDATION: ClinTox Dataset
+============================================================
+
+[1] Dataset loaded: 1484 drugs
+    FDA Approved: 1390 (93.7%)
+    Clinical Toxicity: 112 (7.5%)
+
+[2] Sampled 200 drugs for validation
+
+[3] Initializing QSAR Predictor...
+
+[4] Running predictions...
+    Successfully predicted: 0 / 200
+    WARNING: Too few successful predictions for validation

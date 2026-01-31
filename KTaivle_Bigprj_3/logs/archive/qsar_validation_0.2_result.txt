@@ -1,0 +1,25 @@
+[06:15:06] Explicit valence for atom # 0 N, 4, is greater than permitted
+[06:15:07] Can't kekulize mol.  Unkekulized atoms: 9
+[06:15:10] Can't kekulize mol.  Unkekulized atoms: 4
+[06:15:10] Can't kekulize mol.  Unkekulized atoms: 4
+Generating features...
+=== QSAR ClinTox Validation (Threshold=0.2) ===
+Test Set Size: 296
+accuracy: 78.7%
+precision: 0.241
+recall: 0.864
+f1_score: 0.376
+
+Confusion Matrix:
+             Pred Safe   Pred Toxic
+True Safe       214          60
+True Toxic        3          19
+Specificity (Safe Pass Rate): 78.1%
+Sensitivity (Toxic Detect Rate): 86.4%
+
+Example High Risk Drugs Detected:
+  Prob: 0.70
+  Prob: 0.25
+  Prob: 0.45
+  Prob: 0.27
+  Prob: 0.23

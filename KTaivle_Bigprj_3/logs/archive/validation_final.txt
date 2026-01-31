@@ -1,0 +1,58 @@
+============================================================
+  mPBPK-ML VALIDATION: DrugBank Antibody Data
+============================================================
+
+[1] Loaded: 4350 biotech drugs
+    With half-life: 445
+    With labels (approved/withdrawn): 425
+    - SUCCESS (approved): 386
+    - FAIL (withdrawn): 39
+
+[2] Preparing features...
+    Valid samples: 405
+
+[3] Training mPBPK-ML classifier...
+Loading data from: D:\KTaivle\Big_Project\data\processed\mpbpk_training_data_latest.csv
+Dataset size: 50000 samples
+Features: 15
+Class distribution: [28094 21906]
+Applying SMOTE for class balancing...
+After SMOTE: 44950 samples
+
+==================================================
+Training Decision Tree...
+
+Decision Tree Results:
+  Accuracy:  0.721
+  Precision: 0.638
+  Recall:    0.840
+  F1 Score:  0.725
+  ROC-AUC:   0.789
+
+==================================================
+Training Random Forest...
+
+Random Forest Results:
+  Accuracy:  0.721
+  Precision: 0.634
+  Recall:    0.855
+  F1 Score:  0.728
+  ROC-AUC:   0.791
+
+==================================================
+Running 5-Fold Cross-Validation...
+Decision Tree CV F1: 0.727 ± 0.003
+Random Forest CV F1: 0.730 ± 0.003
+
+[4] Running predictions...
+
+[5] Evaluation Results
+------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\KTaivle\Big_Project\tests\mpbpk_validation.py", line 201, in <module>
+    run_mpbpk_validation()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\KTaivle\Big_Project\tests\mpbpk_validation.py", line 155, in run_mpbpk_validation
+    print(f"\n\U0001f4ca mPBPK-ML vs Real Clinical Status")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'cp949' codec can't encode character '\U0001f4ca' in position 2: illegal multibyte sequence

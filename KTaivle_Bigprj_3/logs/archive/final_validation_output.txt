@@ -1,0 +1,29 @@
+============================================================
+  mPBPK-ML VALIDATION (Real Dose + Half-life)
+============================================================
+
+[1] Data Loaded
+    Total labeled drugs: 425
+    - With Dose info: 302
+    Loading model: mpbpk_classifier_20260127_130051.pkl
+
+[2] Overall Results
+    Accuracy: 47.6%
+    F1 Score: 0.618
+    Confusion Matrix:
+                Pred FAIL   Pred SUCCESS
+    True FAIL        21          17
+    True SUCCESS    198         174
+
+[3] Results with REAL DOSE Data Only
+    Samples: 293
+    Failure Detection Rate (Recall 0): 100.0% (21/21)
+    Approved Pass Rate (Recall 1): 27.2% (74/272)
+Traceback (most recent call last):
+  File "D:\KTaivle\Big_Project\tests\mpbpk_dose_validation.py", line 173, in <module>
+    run_final_validation()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\KTaivle\Big_Project\tests\mpbpk_dose_validation.py", line 158, in run_final_validation
+    print("\n    \u2705 Correctly Identified Failures (Real Dose):")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'cp949' codec can't encode character '\u2705' in position 6: illegal multibyte sequence

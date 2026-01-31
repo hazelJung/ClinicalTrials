@@ -1,0 +1,87 @@
+============================================================
+  mPBPK-ML MODEL PERFORMANCE REPORT
+============================================================
+
+📊 DECISION TREE PERFORMANCE
+----------------------------------------
+   Accuracy:  0.716
+   Precision: 0.623
+   Recall:    0.856
+   F1 Score:  0.721
+   ROC-AUC:   0.795
+
+📊 RANDOM FOREST PERFORMANCE
+----------------------------------------
+   Accuracy:  0.723
+   Precision: 0.630
+   Recall:    0.863
+   F1 Score:  0.728
+   ROC-AUC:   0.798
+
+📊 CROSS-VALIDATION (5-Fold)
+----------------------------------------
+   Decision Tree F1: 0.715 ± 0.004
+   Random Forest F1: 0.717 ± 0.004
+
+📊 FEATURE IMPORTANCE (Top 10)
+----------------------------------------
+          feature  importance
+         log_dose    0.682814
+           log_KD    0.115628
+     log_halflife    0.057290
+           log_T0    0.049085
+           log_MW    0.042670
+   activity_score    0.016633
+           charge    0.007530
+    cl_multiplier    0.006958
+phenotype_encoded    0.005567
+          pop_AMR    0.003623
+
+📊 DECISION TREE RULES (depth=3)
+----------------------------------------
+|--- log_dose <= 0.37
+|   |--- log_dose <= 0.10
+|   |   |--- log_dose <= -0.13
+|   |   |   |--- log_T0 <= 1.14
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |   |--- log_T0 >  1.14
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |--- log_dose >  -0.13
+|   |   |   |--- log_KD <= 0.16
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |   |--- log_KD >  0.16
+|   |   |   |   |--- truncated branch of depth 5
+|   |--- log_dose >  0.10
+|   |   |--- log_KD <= 0.16
+|   |   |   |--- log_halflife <= 2.24
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |   |--- log_halflife >  2.24
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |--- log_KD >  0.16
+|   |   |   |--- log_halflife <= 2.38
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |   |--- log_halflife >  2.38
+|   |   |   |   |--- truncated branch of depth 5
+|--- log_dose >  0.37
+|   |--- log_KD <= 0.94
+|   |   |--- log_dose <= 0.75
+|   |   |   |--- log_KD <= -0.04
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |   |--- log_KD >  -0.04
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |--- log_dose >  0.75
+|   |   |   |--- log_dose <= 1.07
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |   |--- log_dose >  1.07
+|   |   |   |   |--- truncated branch of depth 5
+|   |--- log_KD >  0.94
+|   |   |--- log_dose <= 0.75
+|   |   |   |--- log_dose <= 0.54
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |   |--- log_dose >  0.54
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |--- log_dose >  0.75
+|   |   |   |--- log_dose <= 1.02
+|   |   |   |   |--- truncated branch of depth 5
+|   |   |   |--- log_dose >  1.02
+|   |   |   |   |--- truncated branch of depth 5

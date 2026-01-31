@@ -1,0 +1,24 @@
+============================================================
+  PREDICTION RESULTS FOR CYTOKINES
+============================================================
+
+Drug: Proleukin (Aldesleukin)
+   Type: Cytokine (IL-2)
+   PK: MW=15.3kDa, T1/2=1.42h, KD=0.01nM, Dose=0.037mg/kg
+   Real Status: Approved
+   Model Probability: 8.8%
+   Limit Check: Dose (Log -3.30) | Train Range: -0.69 to 3.0
+   Verdict: FAIL/LOW
+
+Drug: Nemvaleukin alfa (ALKS 4230)
+   Type: Fusion Protein
+   PK: MW=34.4kDa, T1/2=10.0h, KD=1.0nM, Dose=0.006mg/kg
+   Real Status: Phase 3 (Fast Track)
+   Model Probability: 3.9%
+   Limit Check: Dose (Log -5.12) | Train Range: -0.69 to 3.0
+   Verdict: FAIL/LOW
+
+Analysis:
+- The model was trained on antibodies (High MW, High Dose).
+- Cytokines have extremely low doses and short half-lives.
+- If probability is low, it likely reflects the 'Penalty' for low dose/half-life in an Antibody model.

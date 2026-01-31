@@ -1,0 +1,286 @@
+{
+  "validation": {
+    "EUR": {
+      "distribution": {
+        "PM": 0.0607,
+        "IM": 0.3807,
+        "NM": 0.5183,
+        "UM": 0.0403
+      },
+      "pass": false,
+      "details": {
+        "PM": {
+          "value": 0.0607,
+          "reference_range": [
+            0.05,
+            0.1
+          ],
+          "in_range": true
+        },
+        "IM": {
+          "value": 0.3807,
+          "reference_range": [
+            0.1,
+            0.2
+          ],
+          "in_range": false
+        },
+        "NM": {
+          "value": 0.5183,
+          "reference_range": [
+            0.7,
+            0.85
+          ],
+          "in_range": false
+        },
+        "UM": {
+          "value": 0.0403,
+          "reference_range": [
+            0.01,
+            0.05
+          ],
+          "in_range": true
+        }
+      }
+    },
+    "EAS": {
+      "distribution": {
+        "PM": 0.0095,
+        "IM": 0.3794,
+        "NM": 0.6017,
+        "UM": 0.0094
+      },
+      "pass": true,
+      "details": {
+        "PM": {
+          "value": 0.0095,
+          "reference_range": [
+            0.0,
+            0.02
+          ],
+          "in_range": true
+        },
+        "IM": {
+          "value": 0.3794,
+          "reference_range": [
+            0.35,
+            0.55
+          ],
+          "in_range": true
+        },
+        "NM": {
+          "value": 0.6017,
+          "reference_range": [
+            0.45,
+            0.65
+          ],
+          "in_range": true
+        },
+        "UM": {
+          "value": 0.0094,
+          "reference_range": [
+            0.0,
+            0.02
+          ],
+          "in_range": true
+        }
+      }
+    },
+    "AFR": {
+      "distribution": {
+        "PM": 0.0194,
+        "IM": 0.3519,
+        "NM": 0.5479,
+        "UM": 0.0808
+      },
+      "pass": false,
+      "details": {
+        "PM": {
+          "value": 0.0194,
+          "reference_range": [
+            0.01,
+            0.05
+          ],
+          "in_range": true
+        },
+        "IM": {
+          "value": 0.3519,
+          "reference_range": [
+            0.2,
+            0.35
+          ],
+          "in_range": false
+        },
+        "NM": {
+          "value": 0.5479,
+          "reference_range": [
+            0.6,
+            0.75
+          ],
+          "in_range": false
+        },
+        "UM": {
+          "value": 0.0808,
+          "reference_range": [
+            0.02,
+            0.1
+          ],
+          "in_range": true
+        }
+      }
+    },
+    "AMR": {
+      "distribution": {
+        "PM": 0.0244,
+        "IM": 0.265,
+        "NM": 0.6787,
+        "UM": 0.0319
+      },
+      "pass": true,
+      "details": {
+        "PM": {
+          "value": 0.0244,
+          "reference_range": [
+            0.02,
+            0.08
+          ],
+          "in_range": true
+        },
+        "IM": {
+          "value": 0.265,
+          "reference_range": [
+            0.15,
+            0.3
+          ],
+          "in_range": true
+        },
+        "NM": {
+          "value": 0.6787,
+          "reference_range": [
+            0.65,
+            0.8
+          ],
+          "in_range": true
+        },
+        "UM": {
+          "value": 0.0319,
+          "reference_range": [
+            0.01,
+            0.05
+          ],
+          "in_range": true
+        }
+      }
+    },
+    "SAS": {
+      "distribution": {
+        "PM": 0.0227,
+        "IM": 0.2978,
+        "NM": 0.6521,
+        "UM": 0.0274
+      },
+      "pass": true,
+      "details": {
+        "PM": {
+          "value": 0.0227,
+          "reference_range": [
+            0.01,
+            0.05
+          ],
+          "in_range": true
+        },
+        "IM": {
+          "value": 0.2978,
+          "reference_range": [
+            0.15,
+            0.3
+          ],
+          "in_range": true
+        },
+        "NM": {
+          "value": 0.6521,
+          "reference_range": [
+            0.65,
+            0.8
+          ],
+          "in_range": true
+        },
+        "UM": {
+          "value": 0.0274,
+          "reference_range": [
+            0.01,
+            0.05
+          ],
+          "in_range": true
+        }
+      }
+    }
+  },
+  "stability": {
+    "sample_sizes": [
+      100,
+      500,
+      1000,
+      5000,
+      10000
+    ],
+    "distributions": {
+      "100": {
+        "PM": 0.06,
+        "IM": 0.41,
+        "NM": 0.51,
+        "UM": 0.02
+      },
+      "500": {
+        "PM": 0.066,
+        "IM": 0.4,
+        "NM": 0.492,
+        "UM": 0.042
+      },
+      "1000": {
+        "PM": 0.048,
+        "IM": 0.384,
+        "NM": 0.535,
+        "UM": 0.033
+      },
+      "5000": {
+        "PM": 0.0598,
+        "IM": 0.372,
+        "NM": 0.5254,
+        "UM": 0.0428
+      },
+      "10000": {
+        "PM": 0.0641,
+        "IM": 0.3682,
+        "NM": 0.5234,
+        "UM": 0.0443
+      }
+    },
+    "stability": {
+      "PM": {
+        "mean": 0.05958,
+        "std": 0.006260479214884433,
+        "cv_percent": 10.507685825586496,
+        "stable": 1.0
+      },
+      "IM": {
+        "mean": 0.38683999999999996,
+        "std": 0.016033165626288516,
+        "cv_percent": 4.144650404893112,
+        "stable": 1.0
+      },
+      "NM": {
+        "mean": 0.51716,
+        "std": 0.014895583237993743,
+        "cv_percent": 2.8802659211837236,
+        "stable": 1.0
+      },
+      "UM": {
+        "mean": 0.03642,
+        "std": 0.009113155326230317,
+        "cv_percent": 25.022392438853146,
+        "stable": 0.0
+      }
+    }
+  }
+}

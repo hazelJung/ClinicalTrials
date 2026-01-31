@@ -1,0 +1,48 @@
+============================================================
+  mPBPK-ML VALIDATION: DrugBank Antibody Data
+============================================================
+
+[1] Loaded: 4350 biotech drugs
+    With half-life: 445
+    With labels (approved/withdrawn): 425
+    - SUCCESS (approved): 386
+    - FAIL (withdrawn): 39
+
+[2] Preparing features...
+    Valid samples: 405
+
+[3] Training mPBPK-ML classifier...
+Loading data from: D:\KTaivle\Big_Project\data\processed\mpbpk_training_data_latest.csv
+Traceback (most recent call last):
+  File "D:\KTaivle\Big_Project\tests\mpbpk_validation.py", line 201, in <module>
+    run_mpbpk_validation()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\KTaivle\Big_Project\tests\mpbpk_validation.py", line 111, in run_mpbpk_validation
+    classifier.train()
+    ~~~~~~~~~~~~~~~~^^
+  File "D:\KTaivle\Big_Project\src\models\mpbpk_ml.py", line 146, in train
+    df = pd.read_csv(data_path)
+  File "C:\Users\jjjon\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\io\parsers\readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\jjjon\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\io\parsers\readers.py", line 620, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\jjjon\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\io\parsers\readers.py", line 1620, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\jjjon\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\io\parsers\readers.py", line 1880, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\jjjon\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\io\common.py", line 873, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\KTaivle\\Big_Project\\data\\processed\\mpbpk_training_data_latest.csv'

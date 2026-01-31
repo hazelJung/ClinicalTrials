@@ -1,0 +1,14 @@
+DRUGBANK TYPE ANALYSIS
+==================================================
+
+Total drugs: 1,014,328
+
+Drug Types:
+  unknown: 994,498
+  small molecule: 15,480
+  biotech: 4,350
+
+Biotech Subtypes:
+  other_biotech: 3,296
+  antibody: 884
+  peptide: 170

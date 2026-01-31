@@ -1,0 +1,48 @@
+Antibodies: 425
+Approved: 386, Withdrawn: 39
+Accuracy: 18.4%
+
+Confusion Matrix:
+Actual FAIL:     35 correct,   4 wrong
+Actual SUCCESS: 343 wrong,  43 correct
+
+Withdrawn drugs:
+  Lepirudin: t1/2=10h [CORRECT]
+  Sermorelin: t1/2=12h [CORRECT]
+  Interferon alfa-n1: t1/2=1h [CORRECT]
+  Urokinase: t1/2=13h [CORRECT]
+  Interferon alfa-2a: t1/2=2h [CORRECT]
+  Oprelvekin: t1/2=7h [CORRECT]
+  Lyme disease vaccine (recombinant OspA): t1/2=1h [CORRECT]
+  Abciximab: t1/2=10h [CORRECT]
+  Drotrecogin alfa: t1/2=6h [CORRECT]
+  Indium In-111 satumomab pendetide: t1/2=1h [CORRECT]
+  Pegademase: t1/2=3h [CORRECT]
+  Interferon alfacon-1: t1/2=1h [CORRECT]
+  Muromonab: t1/2=1h [CORRECT]
+  Tositumomab: t1/2=1h [CORRECT]
+  Alglucerase: t1/2=7h [CORRECT]
+  Alefacept: t1/2=270h [WRONG]
+  Urofollitropin: t1/2=4h [CORRECT]
+  Efalizumab: t1/2=5h [CORRECT]
+  Daclizumab: t1/2=24h [CORRECT]
+  Pegaptanib: t1/2=3h [CORRECT]
+  Nesiritide: t1/2=18h [CORRECT]
+  rhThrombin: t1/2=15h [CORRECT]
+  Ancrod: t1/2=3h [CORRECT]
+  Sulodexide: t1/2=12h [CORRECT]
+  Catumaxomab: t1/2=2h [CORRECT]
+  Aprotinin: t1/2=150h [WRONG]
+  Chymopapain: t1/2=2h [CORRECT]
+  Fomivirsen: t1/2=31989h [WRONG]
+  Cholecystokinin: t1/2=2h [CORRECT]
+  Peginesatide: t1/2=25h [CORRECT]
+  Albiglutide: t1/2=6h [CORRECT]
+  Somatrem: t1/2=2h [CORRECT]
+  Ancestim: t1/2=4h [CORRECT]
+  Technetium Tc-99m red blood cells: t1/2=99h [CORRECT]
+  Desirudin: t1/2=2h [CORRECT]
+  Lenograstim: t1/2=3h [CORRECT]
+  Belantamab mafodotin: t1/2=12h [CORRECT]
+  Regdanvimab: t1/2=40h [CORRECT]
+  Bebtelovimab: t1/2=175h [WRONG]

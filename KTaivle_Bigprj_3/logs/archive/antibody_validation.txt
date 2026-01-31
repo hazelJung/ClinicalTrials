@@ -1,0 +1,28 @@
+=== True Antibody Filtering ===
+Total biotech drugs: 4350
+MAb by name (-mab suffix): 608
+Heavy MW (>140kDa): 0
+TRUE Antibodies (union): 608
+
+=== Antibody Half-life Distribution (n=149) ===
+Min: 0.8h, Max: 38978.0h
+Median: 19.0h, Mean: 828.7h
+In training range (100-700h): 10 (6.7%)
+
+=== Labeled Antibodies with Dose + Half-life ===
+Total: 132
+Approved: 125
+Withdrawn: 7
+
+=== VALIDATION RESULTS (True Antibodies Only) ===
+Samples: 129
+Accuracy: 30.2%
+F1 Score: 0.416
+
+Confusion Matrix:
+             Pred FAIL   Pred SUCCESS
+True FAIL         7           0
+True SUCCESS     90          32
+
+Withdrawn Detection: 100.0% (7/7)
+Approved Pass Rate: 26.2% (32/122)

@@ -1,0 +1,32 @@
+ANTIBODY DRUGS MATCHING SIMULATION PARAMETERS
+============================================================
+
+Parameter Ranges:
+  KD: 0.01-100 nM
+  Dose: 0.5-50 mg/kg
+  Half-life: 1-163 hours
+  MW: 140-160 kDa
+
+Total antibodies found: 20
+
+Antibodies:
+  - Adalimumab (Target: TNF-α, Matches: 4/4)
+  - Trastuzumab (Target: HER2, Matches: 4/4)
+  - Rituximab (Target: CD20, Matches: 4/4)
+  - Bevacizumab (Target: VEGF, Matches: 4/4)
+  - Cetuximab (Target: EGFR, Matches: 4/4)
+  - Infliximab (Target: TNF-α, Matches: 4/4)
+  - Pembrolizumab (Target: PD-1, Matches: 4/4)
+  - Nivolumab (Target: PD-1, Matches: 4/4)
+  - Atezolizumab (Target: PD-L1, Matches: 4/4)
+  - Durvalumab (Target: PD-L1, Matches: 4/4)
+  - Ipilimumab (Target: CTLA-4, Matches: 4/4)
+  - Omalizumab (Target: IgE, Matches: 4/4)
+  - Natalizumab (Target: α4-integrin, Matches: 4/4)
+  - Tocilizumab (Target: IL-6R, Matches: 4/4)
+  - Ustekinumab (Target: IL-12/23, Matches: 4/4)
+  - Secukinumab (Target: IL-17A, Matches: 4/4)
+  - Vedolizumab (Target: α4β7, Matches: 4/4)
+  - Daratumumab (Target: CD38, Matches: 4/4)
+  - Elotuzumab (Target: SLAMF7, Matches: 4/4)
+  - Obinutuzumab (Target: CD20, Matches: 4/4)

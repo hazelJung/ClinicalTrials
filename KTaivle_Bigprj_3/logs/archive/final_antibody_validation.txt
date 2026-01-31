@@ -1,0 +1,15 @@
+Loaded: mpbpk_classifier_20260127_140004.pkl
+Antibodies with valid data: 132
+Approved: 125, Withdrawn: 7
+
+=== FINAL VALIDATION (New Model, True Antibodies) ===
+Samples: 129
+Accuracy: 36.4%
+F1 Score: 0.494
+
+Confusion Matrix:
+             Pred FAIL   Pred SUCCESS
+True FAIL         7           0
+True SUCCESS     82          40
+Withdrawn Detection: 100.0% (7/7)
+Approved Pass Rate: 32.8% (40/122)

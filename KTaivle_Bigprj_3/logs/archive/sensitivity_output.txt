@@ -1,0 +1,43 @@
+============================================================
+  Model Sensitivity Analysis
+============================================================
+Loading model: mpbpk_classifier_20260127_130051.pkl
+
+[Feature Importance]
+  1. log_dose             (0.5206)
+  2. log_potency          (0.2253)
+  3. log_KD               (0.0839)
+  4. log_halflife         (0.0539)
+  5. log_T0               (0.0387)
+  6. log_MW               (0.0272)
+  7. activity_score       (0.0157)
+  8. charge               (0.0080)
+  9. cl_multiplier        (0.0072)
+  10. phenotype_encoded    (0.0046)
+  11. pop_EUR              (0.0034)
+  12. pop_EAS              (0.0032)
+  13. pop_AFR              (0.0029)
+  14. pop_AMR              (0.0027)
+  15. pop_SAS              (0.0027)
+
+[Half-life Sensitivity Test]
+Varying half-life from 1h to 1000h. Other params fixed at 'default' (good) values.
+
+Half-life (h)   log_halflife    Probability     Prediction
+------------------------------------------------------------
+1               0.00            0.6472          SUCCESS
+5               0.70            0.6472          SUCCESS
+10              1.00            0.6472          SUCCESS
+24              1.38            0.6472          SUCCESS
+48              1.68            0.6472          SUCCESS
+72              1.86            0.6472          SUCCESS
+96              1.98            0.6472          SUCCESS
+120             2.08            0.6274          SUCCESS
+168             2.23            0.6391          SUCCESS
+336             2.53            0.6842          SUCCESS
+500             2.70            0.6903          SUCCESS
+1000            3.00            0.6850          SUCCESS
+
+[Combinatorial Check]
+What if Dose is lower (0.5 mg/kg) with short half-life (10h)?
+Half-life=10h, Dose=0.5mg/kg -> Prob: 0.2051 (FAIL)

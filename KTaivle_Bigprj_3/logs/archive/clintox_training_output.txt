@@ -1,0 +1,60 @@
+[15:54:57] Explicit valence for atom # 0 N, 4, is greater than permitted
+[15:54:57] Can't kekulize mol.  Unkekulized atoms: 9
+[15:55:01] Can't kekulize mol.  Unkekulized atoms: 4
+[15:55:01] Can't kekulize mol.  Unkekulized atoms: 4
+============================================================
+  ClinTox Direct Training & Validation
+============================================================
+
+[1] Loaded 1484 compounds from ClinTox
+    CT_TOX positive: 112 (7.5%)
+
+[2] Calculating molecular descriptors...
+    Valid compounds: 1480
+    Features: 41
+    Class distribution: [1368  112]
+
+[3] Train/Test Split
+    Train: 1184, Test: 296
+
+[4] Applying SMOTE for class balancing...
+    After SMOTE: 2188 samples
+    Class distribution: [1094 1094]
+
+[5] Training Random Forest...
+
+[6] Cross-validation...
+    CV F1: 0.953 ± 0.038
+
+[7] Test Set Evaluation
+    Accuracy:  90.9%
+    Precision: 0.381
+    Recall:    0.364
+    F1 Score:  0.372
+    ROC-AUC:   0.894
+
+    Confusion Matrix:
+                 Pred Safe   Pred Toxic
+    True Safe       261          13
+    True Toxic       14           8
+
+[8] Model saved to: models\qsar\clintox_ct_tox_model.pkl
+
+[9] Threshold Optimization Analysis
+ Threshold |  Precision |     Recall |         F1
+--------------------------------------------------
+      0.10 |      0.167 |      0.955 |      0.284 <-- Best
+      0.15 |      0.202 |      0.909 |      0.331 <-- Best
+      0.20 |      0.241 |      0.864 |      0.376 <-- Best
+      0.25 |      0.315 |      0.773 |      0.447 <-- Best
+      0.30 |      0.311 |      0.636 |      0.418
+      0.35 |      0.308 |      0.545 |      0.393
+      0.40 |      0.414 |      0.545 |      0.471 <-- Best
+      0.45 |      0.417 |      0.455 |      0.435
+      0.50 |      0.381 |      0.364 |      0.372
+
+    Optimal Threshold: 0.4 (F1=0.471)
+
+============================================================
+  Training & Validation Complete
+============================================================

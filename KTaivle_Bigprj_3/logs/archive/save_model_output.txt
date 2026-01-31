@@ -1,0 +1,34 @@
+Using: mpbpk_training_data_20260127_135915.csv
+Loading data from: data\processed\mpbpk_training_data_20260127_135915.csv
+Dataset size: 50000 samples
+Features: 15
+Class distribution: [29742 20258]
+Applying SMOTE for class balancing...
+After SMOTE: 47588 samples
+
+==================================================
+Training Decision Tree...
+
+Decision Tree Results:
+  Accuracy:  0.723
+  Precision: 0.621
+  Recall:    0.813
+  F1 Score:  0.704
+  ROC-AUC:   0.799
+
+==================================================
+Training Random Forest...
+
+Random Forest Results:
+  Accuracy:  0.720
+  Precision: 0.613
+  Recall:    0.841
+  F1 Score:  0.709
+  ROC-AUC:   0.803
+
+==================================================
+Running 5-Fold Cross-Validation...
+Decision Tree CV F1: 0.707 ± 0.004
+Random Forest CV F1: 0.709 ± 0.004
+Models saved to: D:\KTaivle\Big_Project\models\mpbpk_classifier_20260127_140004.pkl
+Model saved to: D:\KTaivle\Big_Project\models\mpbpk_classifier_20260127_140004.pkl

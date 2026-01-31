@@ -1,0 +1,30 @@
+=== FINAL VALIDATION (Threshold=0.20, True Antibodies) ===
+Model: mpbpk_classifier_20260127_140004.pkl
+Decision Threshold: 0.2
+Samples: 129
+Approved: 122, Withdrawn: 7
+
+Performance Metrics:
+  Accuracy:  60.5%
+  Precision: 0.973
+  Recall:    0.598
+  F1 Score:  0.741
+
+Confusion Matrix:
+             Pred FAIL   Pred SUCCESS
+True FAIL         5           2
+True SUCCESS     49          73
+
+Withdrawn Detection Rate: 71.4% (5/7)
+Approved Pass Rate: 59.8% (73/122)
+
+Detected Withdrawn Drugs:
+  Abciximab: Dose=0.14 mg/kg, t1/2=10.0h, Prob=0.15
+  Tositumomab: Dose=0.20 mg/kg, t1/2=0.8h, Prob=0.16
+  Daclizumab: Dose=0.36 mg/kg, t1/2=24.5h, Prob=0.14
+  Catumaxomab: Dose=0.00 mg/kg, t1/2=2.5h, Prob=0.16
+  Regdanvimab: Dose=0.86 mg/kg, t1/2=40.0h, Prob=0.14
+
+Missed Withdrawn Drugs:
+  Efalizumab: Dose=1.43 mg/kg, t1/2=5.0h, Prob=0.29
+  Bebtelovimab: Dose=1.25 mg/kg, t1/2=175.0h, Prob=0.32
