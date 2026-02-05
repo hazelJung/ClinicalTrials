@@ -66,3 +66,22 @@ class Cohort(Base):
 
 # Add backref to Project
 Project.cohorts = relationship("Cohort", back_populates="project")
+
+
+class INDReport(Base):
+    """Store generated IND application documents"""
+    __tablename__ = "ind_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
+    title = Column(String, index=True)
+    file_path = Column(String)  # Path to generated DOCX file
+    status = Column(String, default="Completed")  # Completed, Draft, etc.
+    meta_data = Column(JSON, nullable=True)  # Store input parameters
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    project = relationship("Project", back_populates="ind_reports")
+
+# Add backref to Project for IND Reports
+Project.ind_reports = relationship("INDReport", back_populates="project")
+

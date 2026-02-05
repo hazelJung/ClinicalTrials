@@ -68,8 +68,8 @@ async def dashboard(
     # Using distinct to avoid duplicates if multiple cohorts exist
     results = db.query(models.Project).join(models.Cohort).filter(models.Project.owner_id == current_user.id).distinct().all()
 
-    # 3. IND REPORT Section (Mock Data)
-    ind_reports = MOCK_IND_REPORTS
+    # 3. IND REPORT Section (From Database)
+    ind_reports = db.query(models.INDReport).order_by(models.INDReport.created_at.desc()).all()
     
     return templates.TemplateResponse("dashboard.html", {
         "request": request, 
@@ -96,16 +96,20 @@ async def view_report_detail(
     except:
         return RedirectResponse(url="/login")
 
-    # Find the report from Mock Data
-    report = next((item for item in MOCK_IND_REPORTS if item["id"] == report_id), None)
+    # Find the report from Database
+    report = db.query(models.INDReport).filter(models.INDReport.id == report_id).first()
     
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
+    
+    # Pass form_data from meta_data for pre-filling form fields
+    form_data = report.meta_data if report.meta_data else {}
         
     return templates.TemplateResponse("ind_report_detail.html", {
         "request": request,
         "user": current_user,
         "report": report,
+        "form_data": form_data,
         "sidebar_mode": "compact"
     })
 

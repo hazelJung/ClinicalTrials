@@ -78,6 +78,21 @@ async def create_cohort(
     mw: float = Form(...),
     fu: float = Form(...),
     phase: int = Form(1), # Default to Phase 1
+    # Advanced Settings (New)
+    enzyme: str = Form("CYP2D6"),
+    pheno_pm: float = Form(5.0),
+    pheno_im: float = Form(25.0),
+    pheno_em: float = Form(65.0),
+    pheno_um: float = Form(5.0),
+    bmi_min: float = Form(18.5),
+    bmi_max: float = Form(30.0),
+    bmi_dist: str = Form("normal"),
+    renal_normal: float = Form(100.0),
+    renal_mild: float = Form(0.0),
+    renal_mod: float = Form(0.0),
+    renal_sev: float = Form(0.0),
+    hepatic_grade: str = Form("normal"),
+    concomitant_meds: str = Form(""),
     db: Session = Depends(database.get_db)
 ):
     # Auth Check
@@ -120,12 +135,33 @@ async def create_cohort(
     count = db.query(models.Cohort).filter(models.Cohort.project_id == project_id).count()
     name = f"Cohort #{count + 1} ({pop}, n={n_subjects})"
     
+    # Structure Advanced Settings
+    advanced_settings = {
+        "genetic": {
+            "enzyme": enzyme,
+            "distribution": {"PM": pheno_pm, "IM": pheno_im, "EM": pheno_em, "UM": pheno_um}
+        },
+        "body": {
+            "bmi_range": [bmi_min, bmi_max],
+            "distribution": bmi_dist
+        },
+        "organ": {
+            "renal": {"normal": renal_normal, "mild": renal_mild, "mod": renal_mod, "sev": renal_sev},
+            "hepatic": hepatic_grade
+        },
+        "ddi": {
+            # Parse comma-separated string if present
+            "meds": [m.strip() for m in concomitant_meds.split(",") if m.strip()]
+        }
+    }
+
     demographics = {
         "pop": pop, 
         "n": n_subjects, 
         "age": [age_min, age_max], 
         "female_ratio": female_ratio,
-        "phase": phase 
+        "phase": phase,
+        "advanced": advanced_settings
     }
     drug_params = {
         "cl": cl, "vd": vd, "mw": mw, "fu": fu

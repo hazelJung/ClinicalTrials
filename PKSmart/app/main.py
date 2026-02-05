@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from . import models, database
+from app.routers import ind_agent
 
 from .routers import auth, projects, analysis, cohorts
 
@@ -18,6 +19,8 @@ app.add_middleware(SessionMiddleware, secret_key="YOUR_SUPER_SECRET_KEY")
 # Mount static files (CSS, JS, Images)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
+
+app.include_router(ind_agent.router)
 # Templates
 templates = Jinja2Templates(directory="app/templates")
 

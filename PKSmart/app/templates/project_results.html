@@ -2,93 +2,1396 @@
 
 {% block title %}Results - {{ project.title }}{% endblock %}
 
+{% block header_left %}
+<div class="flex items-center gap-4">
+    <a href="/projects/{{ project.id }}" class="text-gray-400 hover:text-gray-600 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+    </a>
+    <span class="text-xl font-bold text-gray-800">{{ project.title }}</span>
+    <span class="px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-500 font-mono">Results</span>
+</div>
+{% endblock %}
+
 {% block content %}
-<div class="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
+<!-- ApexCharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    <!-- Header Area -->
-    <div class="max-w-3xl w-full text-center mb-8">
-        <h2 class="text-3xl font-extrabold text-gray-900">Clinical Trial Design Results</h2>
-        <p class="mt-2 text-sm text-gray-600">
-            Optimization results for project: <span class="font-semibold text-[#0077a2]">{{ project.title }}</span>
-        </p>
-    </div>
+<!-- Sub-tab Styles -->
+<style>
+    .phase-btn {
+        transition: all 0.2s;
+    }
 
-    <!-- Main Card -->
-    <div class="max-w-3xl w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+    .phase-btn.active {
+        background-color: #0077a2;
+        color: white;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
 
-        <!-- Summary Section -->
-        <div class="bg-[#0077a2] px-6 py-4">
-            <h3 class="text-lg font-medium text-white flex items-center gap-2">
-                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                임상시험 최적화 설계 결과 요약
-            </h3>
+    .phase-btn:not(.active):hover {
+        background-color: #f3f4f6;
+    }
+
+    .pill-tab {
+        padding: 6px 16px;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748B;
+        /* text-slate-500 */
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .pill-tab:hover {
+        background-color: #e2e8f0;
+        /* bg-slate-200 */
+        color: #334155;
+    }
+
+    .pill-tab.active {
+        background-color: #0f172a;
+        /* bg-slate-900 like in the image's dark pills? Or primary blue? Let's use darker slate for contrast or brand blue. */
+        background-color: #334155;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Card Hover Effect */
+    .hover-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .hover-card {
+        transition-property: transform, box-shadow;
+        transition-duration: 300ms;
+    }
+</style>
+
+<div class="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 sm:px-6 lg:px-8">
+
+    <!-- Top Navigation Phase Tabs (Global) -->
+    <div class="max-w-7xl w-full mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-3xl font-extrabold text-gray-900">Clinical Trial Design Results</h2>
+            <p class="mt-1 text-sm text-gray-600">
+                Project: <span class="font-semibold text-[#0077a2]">{{ project.title }}</span>
+            </p>
         </div>
 
-        <div class="p-6 space-y-6">
-            <div class="prose prose-sm text-gray-500">
-                <p>
-                    본 프로젝트(<strong>{{ project.title }}</strong>)에 대한 AI 기반 가상 임상시험 최적화 설계 결과입니다.
-                    아래 생성된 코호트들은 각 임상 단계(Phase 1, 2, 3)에 맞춰 최적화된 인구 집단과 투여 시나리오를 포함하고 있습니다.
-                </p>
+        <div class="flex space-x-1 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
+            <button onclick="switchPhase('1')" id="tab-phase-1"
+                class="phase-btn px-4 py-2 text-sm font-medium rounded-lg text-gray-600 flex items-center gap-2">
+                Phase 1
+            </button>
+            <button onclick="switchPhase('2')" id="tab-phase-2"
+                class="phase-btn px-4 py-2 text-sm font-medium rounded-lg text-gray-600 flex items-center gap-2">
+                Phase 2
+            </button>
+            <button onclick="switchPhase('3')" id="tab-phase-3"
+                class="phase-btn px-4 py-2 text-sm font-medium rounded-lg text-gray-600 flex items-center gap-2">
+                Phase 3
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area (No wrapping container) -->
+    <div class="max-w-7xl w-full">
+
+        <!-- PHASE 1 CONTENT -->
+        <div id="phase-1-content" class="phase-content hidden">
+            <!-- Phase Header -->
+            <div class="mb-6 flex items-start gap-4">
+                <div class="p-3 rounded-xl bg-cyan-100 border border-cyan-200">
+                    <svg class="h-8 w-8 text-cyan-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M10 2v7.31" />
+                        <path d="M14 2v7.31" />
+                        <path d="M8.5 2h7" />
+                        <path d="M14 9.3a6.5 6.5 0 1 1-4 0" />
+                        <path d="M5.52 16h12.96" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-1">Phase 1: Safety & PK/PD</h1>
+                    <p class="text-gray-500 font-medium">안전성 평가 및 약동학/약력학 분석</p>
+                </div>
             </div>
 
-            <!-- Results List -->
-            <div class="space-y-4">
-                <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wider border-b pb-2">Generated Cohorts
-                </h4>
+            <!-- Phase 1: Top Value Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- KPI 1: MTD -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                        MTD (최대내약용량)
+                    </p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">200 <span class="text-sm text-gray-500">mg</span>
+                    </h3>
+                    <p class="text-xs text-cyan-600 mt-1 font-medium bg-cyan-50 inline-block px-1.5 py-0.5 rounded">용량
+                        제한 독성 기준</p>
+                </div>
+                <!-- KPI 2: DLT Rate -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        DLT 발생률
+                    </p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">16.7 <span class="text-sm text-gray-500">%</span>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">1/6 환자</p>
+                </div>
+                <!-- KPI 3: Cmax -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-lime-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        평균 Cmax
+                    </p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">195.6 <span
+                            class="text-sm text-gray-500">ng/mL</span>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">200mg 코호트</p>
+                </div>
+                <!-- KPI 4: t½ -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        평균 t½
+                    </p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">12.4 <span class="text-sm text-gray-500">hr</span>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">제거 반감기</p>
+                </div>
+            </div>
 
-                {% if cohorts %}
-                <div class="grid gap-3">
-                    {% for cohort in cohorts %}
-                    <a href="/projects/{{ project.id }}/cohorts/{{ cohort.id }}"
-                        class="block group bg-gray-50 hover:bg-white border border-gray-200 rounded-lg p-4 transition hover:shadow-md flex items-center justify-between">
+            <!-- Phase 1: Sub Tabs (Moved to Top) -->
+            <div class="flex items-center gap-2 mb-6">
+                <button onclick="switchSubTab('p1', 'pk')" id="tab-p1-pk"
+                    class="pill-tab flex items-center gap-2 active">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    PK Profile
+                </button>
+                <div class="w-px h-4 bg-gray-300 mx-1"></div>
+                <button onclick="switchSubTab('p1', 'safety')" id="tab-p1-safety"
+                    class="pill-tab flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Safety
+                </button>
+                <div class="w-px h-4 bg-gray-300 mx-1"></div>
+                <button onclick="switchSubTab('p1', 'pgx')" id="tab-p1-pgx" class="pill-tab flex items-center gap-2">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M2 15c6.667-6 13.333 0 20-6" />
+                    </svg>
+                    Pharmacogenomics
+                </button>
+            </div>
+
+            <!-- TAB CONTENT: PK -->
+            <div id="content-p1-pk" class="p1-subcontent">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">PK Profile (Spaghetti Plot)</h3>
+                        <p class="text-sm text-gray-500 mb-4">개별 환자별 약물 혈중 농도 변화 (200mg 코호트)</p>
+                        <div id="chart-pk-profile" class="w-full h-80"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">용량별 AUC 분포</h3>
+                        <p class="text-sm text-gray-500 mb-4">용량 비례성 평가를 위한 AUC 파라미터 분포</p>
+                        <div id="chart-pk-auc-bar" class="w-full h-80"></div>
+                    </div>
+                </div>
+
+                <!-- PK Parameter Summary Table -->
+                <div class="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-900">약동학 파라미터 요약</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left">
+                            <thead class="bg-gray-50 text-gray-500 font-medium">
+                                <tr>
+                                    <th class="px-6 py-3">Parameter</th>
+                                    <th class="px-6 py-3">50mg</th>
+                                    <th class="px-6 py-3">100mg</th>
+                                    <th class="px-6 py-3">150mg</th>
+                                    <th class="px-6 py-3 text-cyan-600 font-bold">200mg (MTD)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr class="hover:bg-gray-50/50 transition">
+                                    <td class="px-6 py-4 font-medium text-gray-600">Cmax (ng/mL)</td>
+                                    <td class="px-6 py-4 text-gray-500">52.3 ± 8.2</td>
+                                    <td class="px-6 py-4 text-gray-500">98.5 ± 15.4</td>
+                                    <td class="px-6 py-4 text-gray-500">148.2 ± 22.1</td>
+                                    <td class="px-6 py-4 text-cyan-600 font-bold">195.6 ± 28.5</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50 transition">
+                                    <td class="px-6 py-4 font-medium text-gray-600">AUC0-∞ (ng·hr/mL)</td>
+                                    <td class="px-6 py-4 text-gray-500">520 ± 85</td>
+                                    <td class="px-6 py-4 text-gray-500">1020 ± 165</td>
+                                    <td class="px-6 py-4 text-gray-500">1520 ± 248</td>
+                                    <td class="px-6 py-4 text-cyan-600 font-bold">2050 ± 335</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50 transition">
+                                    <td class="px-6 py-4 font-medium text-gray-600">Tmax (hr)</td>
+                                    <td class="px-6 py-4 text-gray-500">2.0 ± 0.5</td>
+                                    <td class="px-6 py-4 text-gray-500">2.2 ± 0.6</td>
+                                    <td class="px-6 py-4 text-gray-500">2.1 ± 0.5</td>
+                                    <td class="px-6 py-4 text-cyan-600 font-bold">2.3 ± 0.7</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50 transition">
+                                    <td class="px-6 py-4 font-medium text-gray-600">t1/2 (hr)</td>
+                                    <td class="px-6 py-4 text-gray-500">11.8 ± 2.1</td>
+                                    <td class="px-6 py-4 text-gray-500">12.2 ± 2.4</td>
+                                    <td class="px-6 py-4 text-gray-500">12.1 ± 2.2</td>
+                                    <td class="px-6 py-4 text-cyan-600 font-bold">12.4 ± 2.5</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PK KPI Cards (Moved from Global) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
                         <div>
-                            <div class="flex items-center gap-2">
-                                <span
-                                    class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Result
-                                    {{ loop.index }}</span>
-                                <h5 class="text-md font-bold text-gray-800 group-hover:text-[#0077a2]">{{ cohort.name }}
-                                </h5>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-1">{{ cohort.description or 'No description provided.' }}
+                            <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                                최고 혈중 농도 (Cmax)
                             </p>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-2">195.6 <span
+                                    class="text-base font-normal text-gray-500">ng/mL</span></h3>
                         </div>
-                        <div class="flex items-center text-gray-400 group-hover:text-[#0077a2]">
-                            <span class="text-xs mr-2">{{ cohort.created_at.strftime('%Y-%m-%d') }}</span>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                AUC (곡선하면적)
+                            </p>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-2">2050 <span
+                                    class="text-base font-normal text-gray-500">ng·hr/mL</span></h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-lime-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                시험 대상자
+                            </p>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-2">24 <span
+                                    class="text-base font-normal text-gray-500">명</span></h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                반감기 (t1/2)
+                            </p>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-2">12.4 <span
+                                    class="text-base font-normal text-gray-500">hr</span></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: Safety -->
+            <div id="content-p1-safety" class="p1-subcontent hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- DLT Chart -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">용량 제한 독성 (DLT) 발생</h3>
+                        <p class="text-sm text-gray-500 mb-4">3+3 용량 증량 디자인에 따른 DLT 현황</p>
+                        <div id="chart-dlt" class="w-full h-80"></div>
+                    </div>
+                    <!-- AE Stacked Bar Chart -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">이상반응 발생 현황</h3>
+                        <p class="text-sm text-gray-500 mb-4">기관계 분류(SOC)별 용량-의존적 AE 발생 빈도</p>
+                        <div id="chart-ae-stacked" class="w-full h-80"></div>
+                    </div>
+                </div>
+
+                <!-- AE Summary Table -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-900">이상반응 요약 (CTCAE Grade)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left">
+                            <thead class="bg-gray-50 text-gray-500 font-medium">
+                                <tr>
+                                    <th class="px-6 py-3">이상반응</th>
+                                    <th class="px-6 py-3">Grade 1-2</th>
+                                    <th class="px-6 py-3">Grade 3</th>
+                                    <th class="px-6 py-3">Grade 4</th>
+                                    <th class="px-6 py-3 text-right">전체 (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr class="hover:bg-gray-50/50">
+                                    <td class="px-6 py-4 font-medium text-gray-600">오심 (Nausea)</td>
+                                    <td class="px-6 py-4 text-gray-500">8</td>
+                                    <td class="px-6 py-4 text-gray-500">1</td>
+                                    <td class="px-6 py-4 text-gray-500">0</td>
+                                    <td class="px-6 py-4 text-right font-bold text-amber-500">37.5%</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50">
+                                    <td class="px-6 py-4 font-medium text-gray-600">두통 (Headache)</td>
+                                    <td class="px-6 py-4 text-gray-500">6</td>
+                                    <td class="px-6 py-4 text-gray-500">0</td>
+                                    <td class="px-6 py-4 text-gray-500">0</td>
+                                    <td class="px-6 py-4 text-right font-bold text-gray-600">25.0%</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50">
+                                    <td class="px-6 py-4 font-medium text-gray-600">피로 (Fatigue)</td>
+                                    <td class="px-6 py-4 text-gray-500">5</td>
+                                    <td class="px-6 py-4 text-gray-500">1</td>
+                                    <td class="px-6 py-4 text-gray-500">0</td>
+                                    <td class="px-6 py-4 text-right font-bold text-gray-600">25.0%</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50">
+                                    <td class="px-6 py-4 font-medium text-gray-600">설사 (Diarrhea)</td>
+                                    <td class="px-6 py-4 text-gray-500">4</td>
+                                    <td class="px-6 py-4 text-gray-500">0</td>
+                                    <td class="px-6 py-4 text-gray-500">0</td>
+                                    <td class="px-6 py-4 text-right font-bold text-gray-600">16.7%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: Pharmacogenomics -->
+            <div id="content-p1-pgx" class="p1-subcontent hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">CYP2C19 유전자형별 PK 비교</h3>
+                        <p class="text-sm text-gray-500 mb-4">대사 효소 유전자형에 따른 약물 노출 차이</p>
+                        <div id="chart-p1-genotype-scatter" class="w-full h-80"></div>
+                        <div class="mt-2 flex justify-center gap-4 text-xs font-medium">
+                            <span class="flex items-center gap-1"><span
+                                    class="w-2 h-2 rounded-full bg-[#06B6D4]"></span> EM (Extensive)</span>
+                            <span class="flex items-center gap-1"><span
+                                    class="w-2 h-2 rounded-full bg-[#84CC16]"></span> IM (Intermediate)</span>
+                            <span class="flex items-center gap-1"><span
+                                    class="w-2 h-2 rounded-full bg-[#DC2626]"></span> PM (Poor)</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">유전자형별 AUC 분포</h3>
+                        <p class="text-sm text-gray-500 mb-4">PM 그룹에서 유의하게 높은 약물 노출 관찰</p>
+                        <div id="chart-p1-genotype-bar" class="w-full h-80"></div>
+                    </div>
+                </div>
+
+                <!-- Insights Section -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="p-3 bg-cyan-50 rounded-lg text-cyan-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5l7 7-7 7" />
+                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                         </div>
-                    </a>
-                    {% endfor %}
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">약물유전체 분석 인사이트</h3>
+                            <p class="text-sm text-gray-600 mt-1">CYP2C19 Poor Metabolizer (PM) 환자군에서 AUC가 Extensive
+                                Metabolizer (EM) 대비 약 73% 증가하였습니다. 이는 PM 환자에서 용량 조절이 필요할 수 있음을 시사합니다.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">EM vs PM AUC 비율</p>
+                            <h4 class="text-2xl font-bold text-cyan-600">1.73x</h4>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">PM 환자 비율</p>
+                            <h4 class="text-2xl font-bold text-gray-900">16.7%</h4>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">권장 용량 조절</p>
+                            <h4 class="text-2xl font-bold text-amber-500 flex items-center gap-2">
+                                50% <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                </svg>
+                            </h4>
+                        </div>
+                    </div>
                 </div>
-                {% else %}
-                <div class="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    <p class="text-gray-500 text-sm">No optimization results found.</p>
-                </div>
-                {% endif %}
             </div>
 
         </div>
 
-        <!-- Footer Actions -->
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
-            <a href="/dashboard" class="text-sm text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Dashboard
-            </a>
-            <a href="/projects/{{ project.id }}"
-                class="px-4 py-2 bg-[#0077a2] text-white text-sm font-medium rounded-lg hover:bg-[#005a7a] transition shadow-sm">
-                Go to Project
-            </a>
+        <!-- PHASE 2 CONTENT -->
+        <div id="phase-2-content" class="phase-content hidden">
+            <!-- Phase Header -->
+            <div class="mb-6 flex items-start gap-4">
+                <div class="p-3 rounded-xl bg-lime-100 border border-lime-200">
+                    <svg class="h-8 w-8 text-lime-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M2 12h20" />
+                        <path d="M12 2v20" />
+                        <path d="m4.93 4.93 14.14 14.14" />
+                        <path d="m19.07 4.93-14.14 14.14" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-1">Phase 2: PoC & Dose Finding</h1>
+                    <p class="text-gray-500 font-medium">개념 증명 및 최적 용량 탐색</p>
+                </div>
+            </div>
+
+            <!-- Top Value Cards (Restored) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- KPI 1 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-lime-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        객관적 반응률 (ORR)
+                    </p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">42 <span class="text-sm text-gray-500">%</span>
+                    </h3>
+                    <p class="text-xs text-lime-600 mt-1 font-medium bg-lime-50 inline-block px-1.5 py-0.5 rounded">▲
+                        18% vs 대조군</p>
+                </div>
+                <!-- KPI 2 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        질병 통제율 (DCR)
+                    </p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">78 <span class="text-sm text-gray-500">%</span>
+                    </h3>
+                </div>
+                <!-- KPI 3 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        시험 대상자
+                    </p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">86 <span class="text-sm text-gray-500">명</span>
+                    </h3>
+                </div>
+                <!-- KPI 4 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                        최적 용량 (RP2D)
+                    </p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">150 <span class="text-sm text-gray-500">mg</span>
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Sub Tabs (Moved to Top) -->
+            <div class="flex items-center gap-2 mb-6">
+                <button onclick="switchSubTab('p2', 'efficacy')" id="tab-p2-efficacy"
+                    class="pill-tab active">Efficacy</button>
+                <div class="w-px h-4 bg-gray-300 mx-1"></div>
+                <button onclick="switchSubTab('p2', 'dose')" id="tab-p2-dose" class="pill-tab">Dose-Response</button>
+                <div class="w-px h-4 bg-gray-300 mx-1"></div>
+                <button onclick="switchSubTab('p2', 'biomarker')" id="tab-p2-biomarker" class="pill-tab">Biomarker
+                    Analysis</button>
+            </div>
+
+            <div id="content-p2-efficacy" class="p2-subcontent">
+                <!-- Main Waterfall Plot Card -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">Waterfall Plot - 종양 크기 변화</h3>
+                            <p class="text-sm text-gray-500 mt-1">
+                                각 환자의 기저치 대비 최대 종양 크기 변화율 (%) | <span class="font-bold text-[#84CC16]">●
+                                    Biomarker+</span> <span class="font-bold text-gray-400">● Biomarker-</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div id="chart-waterfall" class="w-full h-80"></div>
+
+                    <!-- Custom Legend for PR/SD/PD -->
+                    <div class="mt-4 flex flex-wrap gap-6 justify-center text-sm border-t border-gray-100 pt-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#84CC16]"></span>
+                            <span class="font-medium text-gray-700">PR (Partial Response): ≤-30%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#06B6D4]"></span>
+                            <span class="font-medium text-gray-700">SD (Stable Disease): -30% ~ +20%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#DC2626]"></span>
+                            <span class="font-medium text-gray-700">PD (Progressive Disease): ≥+20%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Cards (Moved to Bottom) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover-card text-center">
+                        <h3 class="text-4xl font-extrabold text-[#84CC16] mb-2">42%</h3>
+                        <p class="text-sm font-medium text-gray-500 mb-1">객관적 반응률 (ORR)</p>
+                        <p class="text-xs text-gray-400">CR: 8% + PR: 34%</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover-card text-center">
+                        <h3 class="text-4xl font-extrabold text-[#06B6D4] mb-2">78%</h3>
+                        <p class="text-sm font-medium text-gray-500 mb-1">질병 통제율 (DCR)</p>
+                        <p class="text-xs text-gray-400">CR + PR + SD</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover-card text-center">
+                        <h3 class="text-4xl font-extrabold text-[#A855F7] mb-2">8.2</h3>
+                        <p class="text-sm font-medium text-gray-500 mb-1">반응 기간 중앙값 (개월)</p>
+                        <p class="text-xs text-gray-400">95% CI: 6.4-10.8</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: Dose-Response -->
+            <div id="content-p2-dose" class="p2-subcontent hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">용량-반응 곡선</h3>
+                        <p class="text-sm text-gray-500 mb-4">유효성과 안전성의 균형점 (Therapeutic Window) 탐색</p>
+                        <div id="chart-dose-response" class="w-full h-80"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">용량별 효능-안전성 프로파일</h3>
+                        <p class="text-sm text-gray-500 mb-4">3상 권장 용량 (RP2D) 결정 근거</p>
+                        <div id="chart-dose-profile" class="w-full h-80"></div>
+                    </div>
+                </div>
+
+                <!-- Insights Section (RP2D Decision) -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="p-3 bg-lime-50 rounded-lg text-lime-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">3상 권장 용량 (RP2D) 결정</h3>
+                            <p class="text-sm text-gray-600 mt-1">용량-반응 분석 결과, <span
+                                    class="font-bold text-lime-600">150mg</span>이 최적의 치료 용량으로 선정되었습니다. 이 용량에서 유효성(ORR
+                                42%)과 안전성(Grade 3+ AE 22%)의 균형이 가장 우수하며, 200mg 이상에서는 독성 증가 대비 유효성 증가가 미미합니다.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">선정 용량 (RP2D)</p>
+                            <h4 class="text-2xl font-bold text-lime-600">150mg</h4>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">ORR at RP2D</p>
+                            <h4 class="text-2xl font-bold text-gray-900">42%</h4>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">Grade 3+ AE</p>
+                            <h4 class="text-2xl font-bold text-gray-900">22%</h4>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">Therapeutic Index</p>
+                            <h4 class="text-2xl font-bold text-cyan-600">1.91</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: Biomarker Analysis -->
+            <div id="content-p2-biomarker" class="p2-subcontent hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">바이오마커별 반응률 비교</h3>
+                        <p class="text-sm text-gray-500 mb-4">Biomarker+ 환자군에서 유의하게 높은 반응률 관찰</p>
+                        <div id="chart-p2-biomarker-bar" class="w-full h-80"></div>
+                    </div>
+
+                    <!-- Responder Analysis Cards -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Responder vs Non-responder 분석</h3>
+                        <p class="text-sm text-gray-500 mb-6">바이오마커 상태에 따른 치료 반응 예측</p>
+
+                        <div class="space-y-4">
+                            <!-- Positive -->
+                            <div class="p-4 rounded-xl border border-lime-200 bg-lime-50/50">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-bold text-lime-700">Biomarker Positive</span>
+                                    <span class="text-xs text-lime-600 font-medium">n=42</span>
+                                </div>
+                                <div class="flex gap-8">
+                                    <div>
+                                        <p class="text-xs text-gray-500">ORR</p>
+                                        <p class="text-2xl font-bold text-gray-900">62%</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500">DCR</p>
+                                        <p class="text-2xl font-bold text-gray-900">88%</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Negative -->
+                            <div class="p-4 rounded-xl border border-gray-200 bg-gray-50">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-bold text-gray-700">Biomarker Negative</span>
+                                    <span class="text-xs text-gray-500 font-medium">n=44</span>
+                                </div>
+                                <div class="flex gap-8">
+                                    <div>
+                                        <p class="text-xs text-gray-500">ORR</p>
+                                        <p class="text-2xl font-bold text-gray-900">24%</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500">DCR</p>
+                                        <p class="text-2xl font-bold text-gray-900">58%</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delta -->
+                            <div
+                                class="p-4 rounded-xl bg-cyan-50 border border-cyan-100 flex justify-between items-center">
+                                <div>
+                                    <span class="font-bold text-cyan-700">ORR 차이 (Δ)</span>
+                                    <p class="text-xs text-cyan-600">p-value < 0.001</p>
+                                </div>
+                                <span class="text-2xl font-bold text-cyan-600">+38%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights Section (Enrichment Strategy) -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="p-3 bg-fuchsia-50 rounded-lg text-fuchsia-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">3상 환자 선별 전략 (Enrichment Strategy)</h3>
+                            <p class="text-sm text-gray-600 mt-1">Biomarker+ 환자군에서 현저히 높은 반응률(ORR 62% vs 24%)이 관찰되어, 3상
+                                임상시험에서는 <span class="font-bold text-fuchsia-600">Biomarker-guided Enrichment</span> 전략을
+                                권장합니다. 이를 통해 임상적 이점이 예상되는 환자군에 집중하여 시험의 성공 확률을 높일 수 있습니다.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">예상 ORR (Enriched)</p>
+                            <h4 class="text-2xl font-bold text-fuchsia-600">62%</h4>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">필요 표본 수 감소</p>
+                            <h4 class="text-2xl font-bold text-gray-900">-35%</h4>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-xs font-medium text-gray-500 mb-1">동반진단 개발</p>
+                            <h4 class="text-2xl font-bold text-lime-600">권장</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
+        <!-- PHASE 3 CONTENT -->
+        <div id="phase-3-content" class="phase-content hidden">
+            <!-- Header -->
+            <div class="mb-6 flex items-start gap-4">
+                <div class="p-3 rounded-xl bg-purple-100 border border-purple-200">
+                    <svg class="h-8 w-8 text-purple-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="m19 9-5 5-4-4-3 3" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-1">Phase 3: Confirmatory Trial</h1>
+                    <p class="text-gray-500 font-medium">통계적 유의성 확증 및 하위 그룹 분석</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- KPI 1 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500">위험비 (HR)</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">0.68</h3>
+                    <p class="text-xs text-purple-600 mt-1 font-medium bg-purple-50 inline-block px-1.5 py-0.5 rounded">
+                        32% Risk Reduction</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500">p-value</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">&lt; 0.001</h3>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500">대상자 수</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">420 <span class="text-sm text-gray-500">명</span>
+                    </h3>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover-card">
+                    <p class="text-sm font-medium text-gray-500">PFS 중앙값</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2">12.4 <span class="text-sm text-gray-500">mo</span>
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Sub Tabs -->
+            <div class="flex items-center gap-2 mb-6">
+                <button onclick="switchSubTab('p3', 'survival')" id="tab-p3-survival" class="pill-tab active">Survival
+                    Analysis</button>
+                <div class="w-px h-4 bg-gray-300 mx-1"></div>
+                <button onclick="switchSubTab('p3', 'subgroup')" id="tab-p3-subgroup" class="pill-tab">Subgroup</button>
+                <div class="w-px h-4 bg-gray-300 mx-1"></div>
+                <button onclick="switchSubTab('p3', 'precision')" id="tab-p3-precision" class="pill-tab">Precision
+                    Medicine</button>
+            </div>
+
+            <!-- TAB CONTENT: Survival Analysis -->
+            <div id="content-p3-survival" class="p3-subcontent">
+                <!-- Main Chart -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">Kaplan-Meier 생존 곡선 (PFS)</h3>
+                    <p class="text-sm text-gray-500 mb-4">무진행 생존기간 분석 | HR 0.68 (95% CI: 0.55-0.84), p < 0.001</p>
+                            <div id="chart-km" class="w-full h-96"></div>
+                            <div class="flex justify-center gap-6 mt-2 text-sm font-medium">
+                                <span class="flex items-center gap-2"><span
+                                        class="w-3 h-1 bg-[#A855F7] rounded-full"></span> 치료군 (DrugTx)</span>
+                                <span class="flex items-center gap-2"><span
+                                        class="w-3 h-1 bg-[#64748B] border border-gray-400 border-dashed rounded-full"
+                                        style="height:0; border-top-width:2px; border-style:dashed;"></span> 대조군
+                                    (SOC)</span>
+                            </div>
+                </div>
+
+                <!-- Bottom Cards -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- PFS Card -->
+                    <div
+                        class="bg-black/90 p-6 rounded-xl border border-gray-800 shadow-sm relative overflow-hidden group">
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition group-hover:bg-purple-500/20">
+                        </div>
+                        <h3 class="text-white font-bold text-lg mb-6">무진행 생존기간 (PFS)</h3>
+
+                        <div class="flex justify-between items-end mb-6">
+                            <div>
+                                <p class="text-xs text-purple-300 mb-1">치료군</p>
+                                <h4 class="text-4xl font-bold text-purple-400">12.4</h4>
+                                <p class="text-[10px] text-gray-500 mt-1">95% CI: 10.8-14.2 개월</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 mb-1">대조군</p>
+                                <h4 class="text-3xl font-bold text-gray-400">7.2</h4>
+                                <p class="text-[10px] text-gray-600 mt-1">95% CI: 6.1-8.5 개월</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-800/50 rounded-lg p-3 text-center border border-gray-700">
+                            <p class="text-xs text-gray-400 mb-1">PFS 개선</p>
+                            <p class="text-xl font-bold text-lime-400">+5.2 개월 (+72%)</p>
+                        </div>
+                    </div>
+
+                    <!-- OS Card -->
+                    <div
+                        class="bg-black/90 p-6 rounded-xl border border-gray-800 shadow-sm relative overflow-hidden group">
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition group-hover:bg-cyan-500/20">
+                        </div>
+                        <h3 class="text-white font-bold text-lg mb-6">전체 생존기간 (OS)</h3>
+
+                        <div class="flex justify-between items-end mb-6">
+                            <div>
+                                <p class="text-xs text-cyan-300 mb-1">치료군</p>
+                                <h4 class="text-4xl font-bold text-cyan-400">24.8</h4>
+                                <p class="text-[10px] text-gray-500 mt-1">95% CI: 21.2-28.6 개월</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 mb-1">대조군</p>
+                                <h4 class="text-3xl font-bold text-gray-400">18.2</h4>
+                                <p class="text-[10px] text-gray-600 mt-1">95% CI: 15.4-21.5 개월</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-800/50 rounded-lg p-3 text-center border border-gray-700">
+                            <p class="text-xs text-gray-400 mb-1">OS 개선</p>
+                            <p class="text-xl font-bold text-lime-400">+6.6 개월 (+36%)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: Subgroup Analysis -->
+            <div id="content-p3-subgroup" class="p3-subcontent hidden">
+                <!-- Main Chart -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">Forest Plot - 하위 그룹 분석</h3>
+                    <p class="text-sm text-gray-500 mb-4">다양한 환자 특성에 따른 위험비 (HR) 분석 | HR < 1.0=치료군 유리</p>
+                            <div id="chart-forest" class="w-full h-96"></div>
+                            <div class="flex justify-center gap-6 mt-4 text-xs text-gray-500">
+                                <span>← 치료군 유리</span>
+                                <span class="border-l border-gray-300 h-4 mx-2"></span>
+                                <span>대조군 유리 →</span>
+                            </div>
+                </div>
+
+                <!-- Insights (Key Findings) -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">하위 그룹 분석 주요 발견</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Max Benefit -->
+                        <div class="bg-lime-950/90 p-5 rounded-lg border border-lime-800">
+                            <h4 class="text-lime-400 font-bold mb-3">최대 이점 그룹</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center text-gray-300">
+                                    <span>Biomarker+ 환자</span>
+                                    <span class="font-bold text-lime-400">HR 0.52</span>
+                                </div>
+                                <div class="flex justify-between items-center text-gray-300">
+                                    <span>ECOG 0 환자</span>
+                                    <span class="font-bold text-lime-400">HR 0.58</span>
+                                </div>
+                                <div class="flex justify-between items-center text-gray-300">
+                                    <span>65세 미만</span>
+                                    <span class="font-bold text-lime-400">HR 0.62</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Uncertain Benefit -->
+                        <div class="bg-amber-950/90 p-5 rounded-lg border border-amber-800">
+                            <h4 class="text-amber-500 font-bold mb-3">이점 불확실 그룹</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center text-gray-300">
+                                    <span>Biomarker- 환자</span>
+                                    <span class="font-bold text-amber-500">HR 0.88</span>
+                                </div>
+                                <div class="flex justify-between items-center text-gray-300">
+                                    <span>ECOG 1 환자</span>
+                                    <span class="font-bold text-amber-500">HR 0.82</span>
+                                </div>
+                                <p class="text-[10px] text-gray-500 mt-2">* 95% CI가 1.0을 포함하여 통계적 유의성 미달</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: Precision Medicine -->
+            <div id="content-p3-precision" class="p3-subcontent hidden">
+                <!-- Charts Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">CYP2C19 유전자형별 생존 분석</h3>
+                        <p class="text-sm text-gray-500 mb-4">약물 대사 효소 유전자형에 따른 치료 효과 차이</p>
+                        <div id="chart-genotype-survival" class="w-full h-80"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">유전자형별 반응률</h3>
+                        <p class="text-sm text-gray-500 mb-4">PM 환자에서 가장 높은 반응률 관찰</p>
+                        <div id="chart-genotype-response" class="w-full h-80"></div>
+                    </div>
+                </div>
+
+                <!-- Strategy Card -->
+                <div class="bg-cyan-950/90 rounded-xl border border-cyan-800 shadow-sm p-6 mb-6">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-cyan-500/10 rounded-lg text-cyan-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-2">정밀 의료 (Precision Medicine) 전략</h3>
+                            <p class="text-sm text-gray-300 bg-opacity-90">약물유전체 분석 결과, CYP2C19 Poor Metabolizer (PM)
+                                환자군에서 가장 우수한 치료 효과가 관찰되었습니다. 이는 약물 노출 증가로 인한 효능 향상으로 해석되며, FDA 승인 시 <span
+                                    class="text-cyan-400 font-bold">동반진단 (Companion Diagnostics)</span> 개발을 권장합니다.</p>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                                <div class="bg-black/20 p-3 rounded border border-cyan-500/20">
+                                    <p class="text-xs text-gray-400">PM 환자 HR</p>
+                                    <h4 class="text-xl font-bold text-cyan-400">0.48</h4>
+                                    <p class="text-[10px] text-cyan-600/60">52% 위험 감소</p>
+                                </div>
+                                <div class="bg-black/20 p-3 rounded border border-cyan-500/20">
+                                    <p class="text-xs text-gray-400">PM 환자 ORR</p>
+                                    <h4 class="text-xl font-bold text-lime-400">62%</h4>
+                                    <p class="text-[10px] text-gray-500">vs 전체 42%</p>
+                                </div>
+                                <div class="bg-black/20 p-3 rounded border border-cyan-500/20">
+                                    <p class="text-xs text-gray-400">PM 환자 PFS</p>
+                                    <h4 class="text-xl font-bold text-white">16.8</h4>
+                                    <p class="text-[10px] text-gray-500">개월</p>
+                                </div>
+                                <div class="bg-black/20 p-3 rounded border border-cyan-500/20">
+                                    <p class="text-xs text-gray-400">PM 환자 OS</p>
+                                    <h4 class="text-xl font-bold text-white">32.4</h4>
+                                    <p class="text-[10px] text-gray-500">개월</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FDA Summary -->
+                <div class="bg-black/95 rounded-xl border border-gray-800 shadow-sm p-6 text-white">
+                    <h3 class="text-lg font-bold mb-4">FDA 승인 전략 요약</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-4 rounded-lg border border-lime-900/50 bg-lime-900/10">
+                            <h4 class="font-bold text-lime-400 mb-2 flex items-center gap-2">
+                                <span
+                                    class="w-4 h-4 rounded-full border border-lime-400 flex items-center justify-center text-[10px]">✓</span>
+                                Primary Endpoint 달성
+                            </h4>
+                            <p class="text-xs text-gray-400">PFS에서 통계적으로 유의한 개선 (HR 0.68, p<0.001)< /p>
+                        </div>
+                        <div class="p-4 rounded-lg border border-cyan-900/50 bg-cyan-900/10">
+                            <h4 class="font-bold text-cyan-400 mb-2 flex items-center gap-2">
+                                <span
+                                    class="w-4 h-4 rounded-full border border-cyan-400 flex items-center justify-center text-[10px]">✓</span>
+                                OS 경향성 확인
+                            </h4>
+                            <p class="text-xs text-gray-400">전체 생존기간에서도 긍정적 경향 (HR 0.72, 중간 분석)</p>
+                        </div>
+                        <div class="p-4 rounded-lg border border-purple-900/50 bg-purple-900/10">
+                            <h4 class="font-bold text-purple-400 mb-2 flex items-center gap-2">
+                                <span
+                                    class="w-4 h-4 rounded-full border border-purple-400 flex items-center justify-center text-[10px]">✓</span>
+                                Biomarker 전략
+                            </h4>
+                            <p class="text-xs text-gray-400">동반진단 개발로 정밀 의료 적응증 확보 가능</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 </div>
+
+<script>
+    // --- Data Definitions ---
+    const COLORS = ['#06B6D4', '#84CC16', '#A855F7', '#F59E0B', '#DC2626'];
+
+    // Phase 1
+    const pkProfileData = [
+        { time: 0, p1: 0, p2: 0, p3: 0, mean: 0 },
+        { time: 0.5, p1: 45, p2: 52, p3: 38, mean: 47.6 },
+        { time: 1, p1: 120, p2: 135, p3: 105, mean: 126 },
+        { time: 2, p1: 185, p2: 198, p3: 170, mean: 189.6 },
+        { time: 4, p1: 145, p2: 158, p3: 132, mean: 150 },
+        { time: 6, p1: 95, p2: 108, p3: 85, mean: 100.6 },
+        { time: 8, p1: 62, p2: 72, p3: 55, mean: 66.4 },
+        { time: 12, p1: 28, p2: 35, p3: 22, mean: 30.6 },
+        { time: 24, p1: 8, p2: 12, p3: 5, mean: 9.6 },
+    ];
+    const aeHeatmapData = [
+        { name: "Gastrointestinal", data: [{ x: '50mg', y: 2 }, { x: '100mg', y: 4 }, { x: '150mg', y: 6 }, { x: '200mg', y: 8 }] },
+        { name: "Nervous Sys", data: [{ x: '50mg', y: 1 }, { x: '100mg', y: 2 }, { x: '150mg', y: 3 }, { x: '200mg', y: 5 }] },
+        { name: "Skin", data: [{ x: '50mg', y: 0 }, { x: '100mg', y: 1 }, { x: '150mg', y: 2 }, { x: '200mg', y: 3 }] }
+    ];
+    const dltData = [{ x: "50mg", y: 0 }, { x: "100mg", y: 0 }, { x: "150mg", y: 1 }, { x: "200mg", y: 1 }, { x: "250mg", y: 2 }];
+    const p1GenotypeData = [
+        { x: "EM", y: 1850 }, { x: "IM", y: 2450 }, { x: "PM", y: 3200 }
+    ];
+    const p1ScatterData = [
+        { x: 1850, y: 195 }, { x: 2450, y: 245 }, { x: 3200, y: 310 }
+    ];
+
+    // Phase 2
+    const waterfallData = [
+        { x: "P01", y: -72, fillColor: '#84CC16' }, { x: "P02", y: -65, fillColor: '#84CC16' },
+        { x: "P03", y: -58, fillColor: '#84CC16' }, { x: "P04", y: -52, fillColor: '#64748B' },
+        { x: "P19", y: 2, fillColor: '#64748B' }, { x: "P20", y: 8, fillColor: '#64748B' },
+        { x: "P24", y: 35, fillColor: '#64748B' }
+    ];
+    const doseResponseData = [{ x: '50mg', y: 15 }, { x: '100mg', y: 28 }, { x: '150mg', y: 42 }, { x: '200mg', y: 52 }, { x: '250mg', y: 58 }];
+    const swimmerData = [
+        { x: 'P01', y: [0, 24], fillColor: '#84CC16' }, { x: 'P02', y: [0, 22], fillColor: '#84CC16' }, { x: 'P03', y: [0, 20], fillColor: '#06B6D4' }
+    ];
+    const biomarkerCompData = [
+        { x: "Biomarker+", y: 62 }, { x: "Biomarker-", y: 24 }, { x: "Overall", y: 42 }
+    ];
+
+    // Phase 3
+    const kmSeries = [
+        { name: 'Treatment', data: [{ x: 0, y: 100 }, { x: 6, y: 88 }, { x: 12, y: 75 }, { x: 24, y: 58 }, { x: 36, y: 48 }] },
+        { name: 'Control', data: [{ x: 0, y: 100 }, { x: 6, y: 75 }, { x: 12, y: 52 }, { x: 24, y: 28 }, { x: 36, y: 18 }] }
+    ];
+    const genotypeSubGroup = [{ x: "Total", y: 12.4 }, { x: "EM", y: 11.8 }, { x: "IM", y: 14.2 }, { x: "PM", y: 16.8 }];
+
+    // --- Tab Switching Logic ---
+    function switchPhase(phaseId) {
+        // Hide all contents
+        document.querySelectorAll('.phase-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`phase-${phaseId}-content`).classList.remove('hidden');
+
+        // Update Top Tabs
+        document.querySelectorAll('.phase-btn').forEach(el => {
+            el.classList.remove('active', 'bg-[#0077a2]', 'text-white', 'shadow-sm');
+            el.classList.add('text-gray-600');
+        });
+        const activeTab = document.getElementById(`tab-phase-${phaseId}`);
+        activeTab.classList.remove('text-gray-600');
+        activeTab.classList.add('active');
+
+        // Trigger resize for charts
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    }
+
+    function switchSubTab(phasePrefix, tabKey) {
+        // Hide all subcontents for this phase
+        document.querySelectorAll(`.${phasePrefix}-subcontent`).forEach(el => el.classList.add('hidden'));
+        document.getElementById(`content-${phasePrefix}-${tabKey}`).classList.remove('hidden');
+
+        // Update Buttons
+        document.querySelectorAll(`[id^='tab-${phasePrefix}-']`).forEach(el => el.classList.remove('active'));
+        document.getElementById(`tab-${phasePrefix}-${tabKey}`).classList.add('active');
+
+        // Trigger resize
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    }
+
+    // --- Chart Rendering ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Light Options
+        const lightOptions = {
+            chart: { background: 'transparent', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+            theme: { mode: 'light' },
+            grid: { borderColor: '#e2e8f0' }, // slate-200
+            dataLabels: { enabled: false },
+            xaxis: {
+                labels: { style: { colors: '#64748B' } }
+            },
+            yaxis: {
+                labels: { style: { colors: '#64748B' } }
+            }
+        };
+
+        // P1 PK
+        new ApexCharts(document.querySelector("#chart-pk-profile"), {
+            ...lightOptions, series: [
+                { name: 'P1', data: pkProfileData.map(d => ({ x: d.time, y: d.p1 })) },
+                { name: 'Mean', data: pkProfileData.map(d => ({ x: d.time, y: d.mean })) }
+            ],
+            chart: { type: 'line', height: 320, background: 'transparent', toolbar: { show: false } },
+            stroke: { width: [1, 3], curve: 'smooth' },
+            colors: ['#06B6D4', '#6b21a8'],
+        }).render();
+
+        new ApexCharts(document.querySelector("#chart-pk-auc-bar"), {
+            ...lightOptions, series: [{ data: [{ x: '50mg', y: 500 }, { x: '100mg', y: 950 }, { x: '150mg', y: 1400 }, { x: '200mg', y: 2000 }] }],
+            chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: false } },
+            colors: ['#06B6D4'],
+        }).render();
+
+        // P1 Safety (Refactored)
+        // DLT: Grouped Bar (Subjects vs DLT Events)
+        new ApexCharts(document.querySelector("#chart-dlt"), {
+            ...lightOptions,
+            series: [
+                { name: '대상자 수', data: [3, 6, 6, 6, 3] },
+                { name: 'DLT 발생', data: [0, 0, 1, 1, 2] }
+            ],
+            chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: false } },
+            plotOptions: { bar: { columnWidth: '50%' } },
+            colors: ['#06B6D4', '#DC2626'], // Cyan (Subjects), Red (Events)
+            xaxis: { categories: ['50mg', '100mg', '150mg', '200mg', '250mg'], axisBorder: { show: false }, axisTicks: { show: false } }
+        }).render();
+
+        // AE: Stacked Bar (SOC by Dose)
+        new ApexCharts(document.querySelector("#chart-ae-stacked"), {
+            ...lightOptions,
+            series: [
+                { name: '50mg', data: [2, 1, 1, 1, 1] }, // Gastro, Nervous, Skin, Cardio, Hepato
+                { name: '100mg', data: [4, 2, 2, 2, 1] },
+                { name: '150mg', data: [6, 3, 3, 0, 0] },
+                { name: '200mg', data: [8, 5, 0, 0, 0] }
+            ],
+            chart: { type: 'bar', height: 320, stacked: true, background: 'transparent', toolbar: { show: false } },
+            plotOptions: { bar: { horizontal: true } },
+            xaxis: { categories: ['위장관계', '신경계', '피부', '심혈관계', '간담도계'] },
+            colors: ['#06B6D4', '#84CC16', '#a855f7', '#f59e0b'], // Dose Colors
+            legend: { position: 'bottom' }
+        }).render();
+
+        // P1 PGx (Refactored)
+        // Genotype Bar (AUC Distribution)
+        new ApexCharts(document.querySelector("#chart-p1-genotype-bar"), {
+            ...lightOptions, series: [{ data: [{ x: 'EM', y: 1850, fillColor: '#06B6D4' }, { x: 'IM', y: 2450, fillColor: '#84CC16' }, { x: 'PM', y: 3200, fillColor: '#DC2626' }] }],
+            chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: false } },
+            plotOptions: { bar: { distributed: true } },
+            yaxis: { title: { text: 'AUC (ng·hr/mL)' } }
+        }).render();
+
+        // Genotype Scatter (AUC vs Cmax)
+        new ApexCharts(document.querySelector("#chart-p1-genotype-scatter"), {
+            ...lightOptions,
+            series: [
+                { name: 'EM (Extensive)', data: [{ x: 1850, y: 195 }] },
+                { name: 'IM (Intermediate)', data: [{ x: 2450, y: 245 }] },
+                { name: 'PM (Poor)', data: [{ x: 3200, y: 312 }] }
+            ],
+            chart: { type: 'scatter', height: 320, background: 'transparent', toolbar: { show: false } },
+            colors: ['#06B6D4', '#84CC16', '#DC2626'],
+            xaxis: { title: { text: 'AUC (ng·hr/mL)' }, min: 0, max: 3500 },
+            yaxis: { title: { text: 'Cmax (ng/mL)' }, min: 0 },
+            markers: { size: 10 }
+        }).render();
+
+        // P2 Efficacy - Waterfall
+        new ApexCharts(document.querySelector("#chart-waterfall"), {
+            ...lightOptions, series: [{ data: waterfallData }],
+            chart: { type: 'bar', height: 400, background: 'transparent', toolbar: { show: false } },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    colors: {
+                        ranges: [
+                            { from: -100, to: -30, color: '#84CC16' }, // PR: Green
+                            { from: -29, to: 20, color: '#06B6D4' },  // SD: Blue
+                            { from: 21, to: 100, color: '#DC2626' }   // PD: Red
+                        ]
+                    },
+                    borderRadius: 2
+                }
+            },
+            xaxis: {
+                min: -100, max: 50,
+                tickAmount: 5,
+                labels: { formatter: (val) => val + '%' }
+            },
+            annotations: {
+                xaxis: [
+                    { x: -30, borderColor: '#84CC16', strokeDashArray: 4, label: { text: 'PR', style: { color: '#84CC16' } } },
+                    { x: 20, borderColor: '#DC2626', strokeDashArray: 4, label: { text: 'PD', style: { color: '#DC2626' } } }
+                ]
+            }
+        }).render();
+
+        /* Swimmer Plot removed from layout for now 
+        new ApexCharts(document.querySelector("#chart-swimmer"), {
+            ...lightOptions, series: [{ data: swimmerData }],
+            chart: { type: 'rangeBar', height: 320, background: 'transparent', toolbar: { show: false } },
+            plotOptions: { bar: { horizontal: true } }
+        }).render(); 
+        */
+
+        /* P2 Dose-Response: Curve (Efficacy vs Safety) */
+        new ApexCharts(document.querySelector("#chart-dose-response"), {
+            ...lightOptions,
+            series: [
+                { name: 'Efficacy (ORR)', type: 'line', data: [{ x: 50, y: 15 }, { x: 100, y: 28 }, { x: 150, y: 42 }, { x: 200, y: 52 }, { x: 250, y: 58 }, { x: 300, y: 62 }] },
+                { name: 'Safety (Toxicity)', type: 'line', data: [{ x: 50, y: 2 }, { x: 100, y: 12 }, { x: 150, y: 22 }, { x: 200, y: 38 }, { x: 250, y: 55 }, { x: 300, y: 72 }] }
+            ],
+            chart: { height: 320, background: 'transparent', toolbar: { show: false } }, // type will be mixed
+            stroke: { width: [3, 3], curve: 'smooth', dashArray: [0, 4] }, // Safety dotted
+            colors: ['#84CC16', '#DC2626'], // Green (Efficacy), Red (Safety)
+            xaxis: {
+                type: 'numeric', min: 50, max: 300, tickAmount: 5,
+                title: { text: 'Dose (mg)' }
+            },
+            yaxis: {
+                min: 0, max: 80,
+                title: { text: 'Rate (%)' }
+            },
+            annotations: {
+                xaxis: [
+                    { x: 150, borderColor: '#06B6D4', label: { text: 'RP2D', style: { color: '#fff', background: '#06B6D4' } } }
+                ]
+            }
+        }).render();
+
+        /* P2 Dose Profile: Grouped Bar */
+        new ApexCharts(document.querySelector("#chart-dose-profile"), {
+            ...lightOptions,
+            series: [
+                { name: 'ORR (%)', data: [25, 42, 52] },
+                { name: 'DCR (%)', data: [55, 78, 65] },
+                { name: 'DLT (%)', data: [0, 8, 18] }
+            ],
+            chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: false } },
+            plotOptions: { bar: { columnWidth: '60%' } },
+            colors: ['#84CC16', '#06B6D4', '#d946ef'], // Green, Cyan, Fuchsia
+            xaxis: { categories: ['100mg', '150mg (RP2D)', '200mg'] }
+        }).render();
+
+        /* P2 Biomarker: Grouped Bar (ORR and DCR) */
+        new ApexCharts(document.querySelector("#chart-p2-biomarker-bar"), {
+            ...lightOptions,
+            series: [
+                { name: 'ORR', data: [62, 24, 42] },
+                { name: 'DCR', data: [88, 58, 78] }
+            ],
+            chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: false } },
+            plotOptions: { bar: { columnWidth: '50%' } },
+            colors: ['#84CC16', '#06B6D4'], // Green for ORR, Cyan for DCR to match cards
+            xaxis: { categories: ['Biomarker+', 'Biomarker-', 'Overall'] },
+            yaxis: { max: 100 }
+        }).render();
+
+        // P3 Survival - KM Curve (Step Line)
+        new ApexCharts(document.querySelector("#chart-km"), {
+            ...lightOptions,
+            series: [
+                { name: 'Treatment (DrugTx)', data: [{ x: 0, y: 100 }, { x: 3, y: 100 }, { x: 3, y: 88 }, { x: 6, y: 88 }, { x: 6, y: 82 }, { x: 9, y: 82 }, { x: 9, y: 75 }, { x: 12, y: 75 }, { x: 12, y: 70 }, { x: 15, y: 70 }, { x: 15, y: 65 }, { x: 18, y: 65 }, { x: 18, y: 62 }, { x: 21, y: 62 }, { x: 21, y: 58 }, { x: 24, y: 58 }, { x: 24, y: 55 }, { x: 27, y: 55 }, { x: 27, y: 52 }, { x: 30, y: 52 }, { x: 30, y: 50 }, { x: 33, y: 50 }, { x: 33, y: 48 }, { x: 36, y: 48 }] },
+                { name: 'Control (SOC)', data: [{ x: 0, y: 100 }, { x: 3, y: 90 }, { x: 3, y: 75 }, { x: 6, y: 75 }, { x: 6, y: 62 }, { x: 9, y: 62 }, { x: 9, y: 52 }, { x: 12, y: 52 }, { x: 12, y: 45 }, { x: 15, y: 45 }, { x: 15, y: 38 }, { x: 18, y: 38 }, { x: 18, y: 32 }, { x: 21, y: 32 }, { x: 21, y: 28 }, { x: 24, y: 28 }, { x: 24, y: 25 }, { x: 27, y: 25 }, { x: 27, y: 22 }, { x: 30, y: 22 }, { x: 30, y: 20 }, { x: 33, y: 20 }, { x: 33, y: 18 }, { x: 36, y: 18 }] }
+            ],
+            chart: { type: 'line', height: 400, background: 'transparent', toolbar: { show: false } },
+            stroke: { curve: 'straight', width: 3, dashArray: [0, 4] }, // Step-like via straight lines + data points
+            colors: ['#A855F7', '#64748B'], // Purple vs Slate
+            xaxis: {
+                title: { text: 'Time (Months)' },
+                type: 'numeric', min: 0, max: 36, tickAmount: 12
+            },
+            yaxis: {
+                title: { text: 'Survival Probability (%)' },
+                min: 0, max: 100
+            },
+            legend: { show: false }
+        }).render();
+
+        /* P3 Subgroup: Forest Plot (Simulated with RangeBar) */
+        // Data format for rangeBar: { x: 'Category', y: [min, max] }
+        // We will misuse rangeBar to show CI, and scatter for Point Estimate is hard in mixed chart with rangeBar in Apex.
+        // Solution: Use RangeBar for CI, and try to add a scatter series? Or stick to simple RangeBar showing CI and center being the point.
+        // Let's use RangeBar and maybe "goals" or just rely on the bar representing the CI.
+        // Better yet, use a scatter chart with error bars if possible, but Apex doesn't support error bars easily.
+        // Alternative: Use RangeBar where y is [LowerCI, UpperCI]. The "point" is not explicitly shown but implied. 
+        // Image shows a dot on the line. 
+        // To mimic image: rangeBar for standard line + scatter for dot. (Apex supports RangeBar + Scatter mixed?) - No easily.
+        // Simplified: RangeBar for CI.
+
+        new ApexCharts(document.querySelector("#chart-forest"), {
+            ...lightOptions,
+            series: [
+                {
+                    name: '95% CI',
+                    data: [
+                        { x: '전체 인구', y: [0.55, 0.84], goals: [{ value: 0.68, strokeWidth: 8, strokeHeight: 8, strokeColor: '#A855F7' }] },
+                        { x: '연령 <65세', y: [0.48, 0.80], goals: [{ value: 0.62, strokeWidth: 8, strokeHeight: 8, strokeColor: '#A855F7' }] },
+                        { x: '연령 ≥65세', y: [0.58, 0.97], goals: [{ value: 0.75, strokeWidth: 8, strokeHeight: 8, strokeColor: '#A855F7' }] },
+                        { x: '남성', y: [0.50, 0.85], goals: [{ value: 0.65, strokeWidth: 8, strokeHeight: 8, strokeColor: '#A855F7' }] },
+                        { x: '여성', y: [0.54, 0.96], goals: [{ value: 0.72, strokeWidth: 8, strokeHeight: 8, strokeColor: '#A855F7' }] },
+                        { x: 'Biomarker+', y: [0.40, 0.68], goals: [{ value: 0.52, strokeWidth: 8, strokeHeight: 8, strokeColor: '#A855F7' }] }, // Highlighted in image
+                        { x: 'Biomarker-', y: [0.68, 1.14], goals: [{ value: 0.88, strokeWidth: 8, strokeHeight: 8, strokeColor: '#F59E0B' }] },
+                        { x: 'ECOG 0', y: [0.44, 0.76], goals: [{ value: 0.58, strokeWidth: 8, strokeHeight: 8, strokeColor: '#A855F7' }] },
+                        { x: 'ECOG 1', y: [0.62, 1.08], goals: [{ value: 0.82, strokeWidth: 8, strokeHeight: 8, strokeColor: '#F59E0B' }] }
+                    ]
+                }
+            ],
+            chart: { type: 'rangeBar', height: 400, background: 'transparent', toolbar: { show: false } },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    barHeight: '10%' // Make lines thin
+                }
+            },
+            colors: ['#CBD5E1'], // Gray for the CI Line
+            xaxis: {
+                min: 0, max: 1.5, tickAmount: 3,
+                title: { text: 'Hazard Ratio (HR)' }
+            },
+            annotations: {
+                xaxis: [{ x: 1.0, borderColor: '#94a3b8', strokeDashArray: 4 }]
+            }
+        }).render();
+
+        /* P3 Precision: Genotype Charts */
+        // 1. Survival (PFS/OS) by Genotype (Horizontal Bar)
+        new ApexCharts(document.querySelector("#chart-genotype-survival"), {
+            ...lightOptions,
+            series: [
+                { name: 'PFS (개월)', data: [16.8, 12.4, 11.2, 16.8] },
+                { name: 'OS (개월)', data: [32.4, 24.8, 22.1, 32.4] }
+            ],
+            chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: false } },
+            plotOptions: { bar: { horizontal: true, dataLabels: { position: 'top' } } },
+            colors: ['#d946ef', '#06B6D4'], // Fuchsia, Cyan
+            xaxis: { categories: ['CYP2C19 PM', 'CYP2C19 IM', 'CYP2C19 EM', '전체'] }
+        }).render();
+
+        // 2. Response (CR/PR) by Genotype (Grouped/Stacked Bar)
+        new ApexCharts(document.querySelector("#chart-genotype-response"), {
+            ...lightOptions,
+            series: [
+                { name: 'CR (%)', data: [5, 10, 15] },
+                { name: 'PR (%)', data: [35, 40, 50] }
+            ],
+            chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: false }, stacked: true },
+            plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
+            colors: ['#84CC16', '#06B6D4'], // Lime, Cyan
+            xaxis: { categories: ['EM', 'IM', 'PM'] },
+            yaxis: { max: 100 }
+        }).render();
+
+        // Init
+        switchPhase('1');
+    });
+</script>
 {% endblock %}

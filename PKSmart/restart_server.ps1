@@ -13,4 +13,4 @@ if ($container) {
 docker rm -f pksmart_app 2> $null
 
 Write-Host "🚀 Starting PKSmart Platform..." -ForegroundColor Cyan
-docker run --name pksmart_app --rm -p 8001:8000 -v ${PWD}:/app pksmart uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+docker run --name pksmart_app --rm -p 8000:8000 --env-file .env -v ${PWD}:/app pksmart uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
